@@ -1,0 +1,25 @@
+"""Verify retained snapshot attribution and pinned runtime source locally."""
+import hashlib
+import json
+from pathlib import Path
+import re
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_every_original_generator_path_has_valid_provenance_and_final_hash():
+    manifest = json.loads((ROOT / 'docs/source-provenance.json').read_text())
+    entries = manifest['files']
+    generator = [item for item in entries if item['source_path'].startswith('btc_envelope_maker/')]
+    assert len(generator) == manifest['original_generator_file_count'] == 26
+    assert len({item['source_path'] for item in entries}) == len(entries)
+    for item in entries:
+        assert re.fullmatch('[0-9a-f]{64}', item['source_sha256'])
+        assert re.fullmatch('[0-9a-f]{40}', item['source_git_blob'])
+        actual = hashlib.sha256((ROOT / item['destination_path']).read_bytes()).hexdigest()
+        assert actual == item['destination_sha256'], item['destination_path']
+        if item['adaptation'] == 'unchanged':
+            assert actual == item['source_sha256']
+    for name in ('address_validation.py', 'btc_envelope_maker.py', 'btc_db.py', 'requirements.txt'):
+        entry = next(item for item in generator if item['source_path'] == 'btc_envelope_maker/' + name)
+        assert entry['adaptation'] == 'unchanged'

@@ -1,0 +1,264 @@
+{
+  "source_repository": "https://github.com/btc4-fun/btc-envelope-maker",
+  "source_commit": "e0e925c8d224a7595a15261e50e97b50d300a782",
+  "extraction": "Explicit allowlist; git show COMMIT:path, never workspace recursion",
+  "original_generator_file_count": 26,
+  "files": [
+    {
+      "source_path": "btc_envelope_maker/DEPENDENCIES.md",
+      "destination_path": "btc_envelope_maker/DEPENDENCIES.md",
+      "source_sha256": "4e7271f19036eb7e4dfbb07582105c522a659800e68f4957ed2c56dae1c1c535",
+      "source_git_blob": "555b84ad3a8f2a8e66e0d43bd34d946b195e03cd",
+      "destination_sha256": "4e7271f19036eb7e4dfbb07582105c522a659800e68f4957ed2c56dae1c1c535",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/README.md",
+      "destination_path": "btc_envelope_maker/README.md",
+      "source_sha256": "64a3124ec4ac0de0352b1e3c17c74b99cd9349adaae8a469ccd9598b5273ce01",
+      "source_git_blob": "16b72f1d6d22349da2d7f31c68447c0cc655c4dc",
+      "destination_sha256": "64a3124ec4ac0de0352b1e3c17c74b99cd9349adaae8a469ccd9598b5273ce01",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/address_validation.py",
+      "destination_path": "btc_envelope_maker/address_validation.py",
+      "source_sha256": "ba2a5a631acbabdc5646df83ee1abf4d6e2f9104ad8b3835419c3e74eddf8eaa",
+      "source_git_blob": "29dea48230e760d940df2c1c4e95bdfb4a4b6816",
+      "destination_sha256": "ba2a5a631acbabdc5646df83ee1abf4d6e2f9104ad8b3835419c3e74eddf8eaa",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/btc_db.py",
+      "destination_path": "btc_envelope_maker/btc_db.py",
+      "source_sha256": "d0bd597d80751d0dbb822f14ba81ef634724b769672830287a9a201d05549369",
+      "source_git_blob": "74c81c01c77fcc717099ef6d9b6ce4f29c379bbd",
+      "destination_sha256": "d0bd597d80751d0dbb822f14ba81ef634724b769672830287a9a201d05549369",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/btc_envelope_maker.py",
+      "destination_path": "btc_envelope_maker/btc_envelope_maker.py",
+      "source_sha256": "ba28920c681daf903730c294ac510dde5deb111c7262a8534fe6bfde46bbb37e",
+      "source_git_blob": "8bdfb78ad4655c1f8bfcdf98e28510a9c3d6b863",
+      "destination_sha256": "ba28920c681daf903730c294ac510dde5deb111c7262a8534fe6bfde46bbb37e",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/config.example.toml",
+      "destination_path": "btc_envelope_maker/config.example.toml",
+      "source_sha256": "dbdcafae7aebfc0c20e3b4a7cd2806d55467678ed025a5ac2915ca8feeca1eb8",
+      "source_git_blob": "7a7c569bf6d646ec6e44e13ba6ec6d6a3bfce245",
+      "destination_sha256": "dbdcafae7aebfc0c20e3b4a7cd2806d55467678ed025a5ac2915ca8feeca1eb8",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/fonts/LICENSE",
+      "destination_path": "btc_envelope_maker/fonts/LICENSE",
+      "source_sha256": "ffc6462e609ff44ad9edcaf172b073039ae47c9fdad79ef3ac7d9808b58950a9",
+      "source_git_blob": "2deb02448573a63745a4735292b97b7a6cf81c89",
+      "destination_sha256": "ffc6462e609ff44ad9edcaf172b073039ae47c9fdad79ef3ac7d9808b58950a9",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/fonts/Vazir-Code-Hack.ttf",
+      "destination_path": "btc_envelope_maker/fonts/Vazir-Code-Hack.ttf",
+      "source_sha256": "60681693ad095a24259b176ab7ded3df21afa810fef4372587adc37b3d21fea3",
+      "source_git_blob": "d7ba340cd71374cbd827f6fcf5388345dc168c58",
+      "destination_sha256": "60681693ad095a24259b176ab7ded3df21afa810fef4372587adc37b3d21fea3",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/logo.png",
+      "destination_path": "btc_envelope_maker/logo.png",
+      "source_sha256": "430bc96cf01c3e69e451080c00580cf1afea1eaf58c638b876ce8b597e9aff6c",
+      "source_git_blob": "ce8597f0de35c682254f81263fb6ad9e089f9a9a",
+      "destination_sha256": "430bc96cf01c3e69e451080c00580cf1afea1eaf58c638b876ce8b597e9aff6c",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/nfc_bindings.py",
+      "destination_path": "btc_envelope_maker/nfc_bindings.py",
+      "source_sha256": "8fbdfe56e68601a5182b68081c96c79170b0b274ed587cb4630359a06813c450",
+      "source_git_blob": "55e455444a28c88977c7eb743036eea93803016d",
+      "destination_sha256": "8fbdfe56e68601a5182b68081c96c79170b0b274ed587cb4630359a06813c450",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/requirements-artifacts.json",
+      "destination_path": "btc_envelope_maker/requirements-artifacts.json",
+      "source_sha256": "26f2c0f4b0ff91a8adc53e867c654c731672f213929c135391ba5424a894f2f7",
+      "source_git_blob": "83e8620ca973430624b0679a8d41951ac61e2ca5",
+      "destination_sha256": "26f2c0f4b0ff91a8adc53e867c654c731672f213929c135391ba5424a894f2f7",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/requirements-db.in",
+      "destination_path": "btc_envelope_maker/requirements-db.in",
+      "source_sha256": "4d0afd7b829683a12aed7a81a949f02c60918d74ce34bec29b5c239a9dd5929a",
+      "source_git_blob": "59e2e4008bdc32a1b4508ef99fc824b4688b3594",
+      "destination_sha256": "4d0afd7b829683a12aed7a81a949f02c60918d74ce34bec29b5c239a9dd5929a",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/requirements-db.txt",
+      "destination_path": "btc_envelope_maker/requirements-db.txt",
+      "source_sha256": "cfeafa08b42422f74896d8338b596cbeb52ec22e5695271476f68d34a625f257",
+      "source_git_blob": "dc7de3f05f8341ec8c0a51a3c0e7bdfd2ac0f575",
+      "destination_sha256": "cfeafa08b42422f74896d8338b596cbeb52ec22e5695271476f68d34a625f257",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/requirements-runtime.in",
+      "destination_path": "btc_envelope_maker/requirements-runtime.in",
+      "source_sha256": "064fb1e519bda867682546fc28e9e251595269c3e3de8e2b30b8c89b604fad6c",
+      "source_git_blob": "d20dbf4d174e06d86f1010f7b5e8285276ba46c3",
+      "destination_sha256": "064fb1e519bda867682546fc28e9e251595269c3e3de8e2b30b8c89b604fad6c",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/requirements-runtime.txt",
+      "destination_path": "btc_envelope_maker/requirements-runtime.txt",
+      "source_sha256": "a2de1dd438c28d7b13b112bdbac45f93d6e2633eb51b52fc3e682632915b1bd9",
+      "source_git_blob": "71537b1bce24a8eeb113cb61be5f446b596d6f08",
+      "destination_sha256": "a2de1dd438c28d7b13b112bdbac45f93d6e2633eb51b52fc3e682632915b1bd9",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/requirements-test.in",
+      "destination_path": "btc_envelope_maker/requirements-test.in",
+      "source_sha256": "5fb9cb7b57ba1a23283ac23989724868480641d822dc3d742e84de5aebbbf42e",
+      "source_git_blob": "e9be22f9e501cb7d1523ee3c3e35331a12072283",
+      "destination_sha256": "5fb9cb7b57ba1a23283ac23989724868480641d822dc3d742e84de5aebbbf42e",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/requirements-test.txt",
+      "destination_path": "btc_envelope_maker/requirements-test.txt",
+      "source_sha256": "63abdb440075609eb6a425349ad1ab43d5844441c42c2c1c6af9909865a91672",
+      "source_git_blob": "290f0ad5b2cb4a1e480c016bb6216604f98dcaea",
+      "destination_sha256": "63abdb440075609eb6a425349ad1ab43d5844441c42c2c1c6af9909865a91672",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/requirements.txt",
+      "destination_path": "btc_envelope_maker/requirements.txt",
+      "source_sha256": "8f28effbbf912070a7500718dceba5a703821bfaffa73029467cdeafadc5305a",
+      "source_git_blob": "bb1245f0b14aac1d8aa0a6f7b9860c64be7cad42",
+      "destination_sha256": "8f28effbbf912070a7500718dceba5a703821bfaffa73029467cdeafadc5305a",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/tests/signal_worker.py",
+      "destination_path": "btc_envelope_maker/tests/signal_worker.py",
+      "source_sha256": "212d1a41bc4fff4ed4507fe6025e138a67320b3d9993803d5bcacda3af20919f",
+      "source_git_blob": "2ee8b64e6acb40c114fae6e8565e7ec821354909",
+      "destination_sha256": "212d1a41bc4fff4ed4507fe6025e138a67320b3d9993803d5bcacda3af20919f",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/tests/test_address_validation.py",
+      "destination_path": "btc_envelope_maker/tests/test_address_validation.py",
+      "source_sha256": "33c879defc9cc3b753922e3afe834aea9e8f017f45d8010180294beccd230353",
+      "source_git_blob": "926e7bd529c38222b26466c4f9218f17f4561206",
+      "destination_sha256": "1efb89bc4e8155a09114c691e399ce461068f651f70cc292d89e5446c5c160e3",
+      "adaptation": "Remove website identity import; retain local database identity and independent address contract."
+    },
+    {
+      "source_path": "btc_envelope_maker/tests/test_database_security.py",
+      "destination_path": "btc_envelope_maker/tests/test_database_security.py",
+      "source_sha256": "42afc29c99c98f2f78123241d2806f21930d48e41a5d8fa94013f30babedec41",
+      "source_git_blob": "3dc298ad2bb38f7066a4529d274707c591b69479",
+      "destination_sha256": "8d1e3af591f7c69a7b62cdb7dc20f94e5f49e33ae93d3920868656cdb9b08faa",
+      "adaptation": "Use the standalone generator validator instead of importing the website facade."
+    },
+    {
+      "source_path": "btc_envelope_maker/tests/test_dependency_guidance.py",
+      "destination_path": "btc_envelope_maker/tests/test_dependency_guidance.py",
+      "source_sha256": "7160f819c4db7b715d86df2024153a50da51032f018e08a63a4aee608ca583ba",
+      "source_git_blob": "a9fc001a1f8dc4413b2d95ce976668f217c8c02d",
+      "destination_sha256": "7160f819c4db7b715d86df2024153a50da51032f018e08a63a4aee608ca583ba",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/tests/test_generator_crypto.py",
+      "destination_path": "btc_envelope_maker/tests/test_generator_crypto.py",
+      "source_sha256": "609aecc80aaad41f973965965205c13d58165246d236a2db6d7a489eafd590dd",
+      "source_git_blob": "4e07ab75e12c4825c1d43521d9b179e2822a7802",
+      "destination_sha256": "609aecc80aaad41f973965965205c13d58165246d236a2db6d7a489eafd590dd",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/tests/test_generator_security.py",
+      "destination_path": "btc_envelope_maker/tests/test_generator_security.py",
+      "source_sha256": "5d0c5cdf6bfd158a543f3dd26204868770aa16e9131443185066843a3efac7cb",
+      "source_git_blob": "0dcd4f3263135032a1759948b87c3a11327af0cd",
+      "destination_sha256": "5d0c5cdf6bfd158a543f3dd26204868770aa16e9131443185066843a3efac7cb",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/tests/test_nfc_bindings.py",
+      "destination_path": "btc_envelope_maker/tests/test_nfc_bindings.py",
+      "source_sha256": "e91695f9dda6fd60f63f1ee3029a60860e4cfb6f36d78f8f3f32457ba39b5d1f",
+      "source_git_blob": "aaf3bcdd60a19a2ba3ca9b134c8f6303315212be",
+      "destination_sha256": "e91695f9dda6fd60f63f1ee3029a60860e4cfb6f36d78f8f3f32457ba39b5d1f",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "btc_envelope_maker/tests/test_standalone.py",
+      "destination_path": "btc_envelope_maker/tests/test_standalone.py",
+      "source_sha256": "82c917c1d5feab3222a7dd71d221c93a6b7b4837b347eda650bbbfb1f6abe5c1",
+      "source_git_blob": "1486a232338db59f6f5c177eb31660cd3d2a70e8",
+      "destination_sha256": "82c917c1d5feab3222a7dd71d221c93a6b7b4837b347eda650bbbfb1f6abe5c1",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "LICENSE.md",
+      "destination_path": "LICENSE.md",
+      "source_sha256": "c0ea4a896d2c8c394b29f9427589996db826cd501c512279ff0ed3ef48fabbe5",
+      "source_git_blob": "5ecc88cfc4b1cff608ed640efe913c9dd97935c3",
+      "destination_sha256": "c0ea4a896d2c8c394b29f9427589996db826cd501c512279ff0ed3ef48fabbe5",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "NOTICE",
+      "destination_path": "NOTICE",
+      "source_sha256": "38b823b836aba2bb8c4ca6dbb24a68c168dcd85b474cd9a8535cbedf33cfdba0",
+      "source_git_blob": "3e1052d285d6c1d56e552e9883c9222b11d3ba69",
+      "destination_sha256": "af414b80b4c9ecf8553b00cbe43c877305e6ab1a1f1267f58081a390f182b6ef",
+      "adaptation": "Remove website font attribution; retain generator and validator licensing."
+    },
+    {
+      "source_path": "SECURITY.md",
+      "destination_path": "docs/history/SECURITY.md",
+      "source_sha256": "8f6c7283d50da662241853a1b1603f2c5c8d7caa142d58b4583d3e085541b511",
+      "source_git_blob": "c615d270c9a8d4b6145e517a8e5655f66505b4b8",
+      "destination_sha256": "8f6c7283d50da662241853a1b1603f2c5c8d7caa142d58b4583d3e085541b511",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "SECURITY-FOLLOWUP.md",
+      "destination_path": "docs/history/SECURITY-FOLLOWUP.md",
+      "source_sha256": "6d765cccc94171d074d37c2aaa17ea72191e611437dab605838483342f5cf13a",
+      "source_git_blob": "5cee873fc215270914663350f6192d7cb6c7bd99",
+      "destination_sha256": "6d765cccc94171d074d37c2aaa17ea72191e611437dab605838483342f5cf13a",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "SECURITY-ROUND2.md",
+      "destination_path": "docs/history/SECURITY-ROUND2.md",
+      "source_sha256": "833ccabae51c91f7c027fd4a94bc959c765e2820cd5325a99bc1c1084ade0f8c",
+      "source_git_blob": "07596fd222494497e8bf5ca0451b09d4cb003c71",
+      "destination_sha256": "833ccabae51c91f7c027fd4a94bc959c765e2820cd5325a99bc1c1084ade0f8c",
+      "adaptation": "unchanged"
+    },
+    {
+      "source_path": "bitcoin4funsite/tests/test_wallet_metadata_schema.py",
+      "destination_path": "btc_envelope_maker/tests/test_wallet_metadata_schema.py",
+      "source_sha256": "c309f0de9dfb4022f3c849f3a13531af0895454777f9ca6277db63e75b50363d",
+      "source_git_blob": "113fc3f080c7ae063fc97bba49bf811b7329a0c5",
+      "destination_sha256": "c309f0de9dfb4022f3c849f3a13531af0895454777f9ca6277db63e75b50363d",
+      "adaptation": "unchanged"
+    }
+  ]
+}

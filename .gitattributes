@@ -1,0 +1,10 @@
+* text=auto
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.png binary
+*.ttf binary
+# Preserve the upstream font license bytes, including historical spaces.
+btc_envelope_maker/fonts/LICENSE -whitespace
