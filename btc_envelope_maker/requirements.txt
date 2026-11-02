@@ -1,5 +1,7 @@
-bip_utils>=2.9
-reportlab>=4.0
-arabic-reshaper>=3.0
-python-bidi>=0.4.2
-tzdata>=2024.1
+# این فایل فقط راهنماست؛ وابستگی آزاد نصب نمی‌کند.
+# راهنمای نصب آفلاین و قفل بررسی‌شده را بخوانید:
+# DEPENDENCIES.md
+# برای نصب، قفل زمان اجرا و بررسی چکیده الزامی است:
+# python -m pip install --require-hashes -r btc_envelope_maker/requirements-runtime.txt
+# آزمون‌ها قفل جداگانه دارند:
+# requirements-test.txt

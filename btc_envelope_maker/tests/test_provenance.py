@@ -20,6 +20,6 @@ def test_every_original_generator_path_has_valid_provenance_and_final_hash():
         assert actual == item['destination_sha256'], item['destination_path']
         if item['adaptation'] == 'unchanged':
             assert actual == item['source_sha256']
-    for name in ('address_validation.py', 'btc_envelope_maker.py', 'btc_db.py', 'requirements.txt'):
+    for name in ('address_validation.py', 'btc_envelope_maker.py', 'btc_db.py'):
         entry = next(item for item in generator if item['source_path'] == 'btc_envelope_maker/' + name)
         assert entry['adaptation'] == 'unchanged'

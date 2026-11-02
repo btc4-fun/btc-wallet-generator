@@ -53,6 +53,14 @@ raise SystemExit(btc_db.main(sys.argv[1:]))
     assert_locked_guidance(result.stderr, database=missing == 'postgres')
 
 
+def test_legacy_requirements_is_guidance_only():
+    text = (SOURCE / 'requirements.txt').read_text()
+    assert all(not line.strip() or line.lstrip().startswith('#') for line in text.splitlines())
+    assert '--require-hashes' in text
+    assert 'requirements-runtime.txt' in text
+    assert 'DEPENDENCIES.md' in text
+
+
 def test_database_module_help_uses_locked_recovery():
     doc = ast.get_docstring(ast.parse((SOURCE / 'btc_db.py').read_text()))
     assert_locked_guidance(doc, database=True)

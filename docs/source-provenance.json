@@ -145,8 +145,8 @@
       "destination_path": "btc_envelope_maker/requirements.txt",
       "source_sha256": "8f28effbbf912070a7500718dceba5a703821bfaffa73029467cdeafadc5305a",
       "source_git_blob": "bb1245f0b14aac1d8aa0a6f7b9860c64be7cad42",
-      "destination_sha256": "8f28effbbf912070a7500718dceba5a703821bfaffa73029467cdeafadc5305a",
-      "adaptation": "unchanged"
+      "destination_sha256": "1afbe610b52d3fcad1aa68e6c3e8bc9554989c56d83e012e5615a6fc504b1f03",
+      "adaptation": "راهنمای نصب با قفل و بررسی چکیده؛ بدون وابستگی آزاد"
     },
     {
       "source_path": "btc_envelope_maker/tests/signal_worker.py",
@@ -177,8 +177,8 @@
       "destination_path": "btc_envelope_maker/tests/test_dependency_guidance.py",
       "source_sha256": "7160f819c4db7b715d86df2024153a50da51032f018e08a63a4aee608ca583ba",
       "source_git_blob": "a9fc001a1f8dc4413b2d95ce976668f217c8c02d",
-      "destination_sha256": "7160f819c4db7b715d86df2024153a50da51032f018e08a63a4aee608ca583ba",
-      "adaptation": "unchanged"
+      "destination_sha256": "0fdd65a602adb83c61b1d60f4ac3e2b0ba01f965a462d4800f97e6817481b770",
+      "adaptation": "افزودن آزمون حذف نصب آزاد از فایل قدیمی"
     },
     {
       "source_path": "btc_envelope_maker/tests/test_generator_crypto.py",
