@@ -17,10 +17,13 @@ libraries are prerequisites, not Python packages covered by these locks.
 | `requirements-db.in` / `.txt` | Optional PostgreSQL `psycopg` + binary implementation; install alongside runtime |
 | `requirements-artifacts.json` | Exact wheel filenames, HTTPS URLs, digest matches, release metadata URLs/hashes and wheel `Requires-Dist` metadata for all 34 distinct artifacts |
 
-`requirements.txt` is a legacy, operator-owned file. The new installation path
-**does not include it** and preserves local additions. Direct runtime needs
-were taken from its committed version at
-`586c33fa5e36cd1d54786c377bdd5ba59c049692`, not the operator's edited copy.
+فایل زیر در مخزن مستقل کنونی راهنمای صرف است؛ فقط توضیح دارد، وابستگی نصب نمی‌کند و مسیر نصب نباید آن را وارد کند. دیگر فایل وابستگیِ متعلق به اپراتور نیست.
+
+`requirements.txt`
+
+نیازهای مستقیم زمان اجرا هنگام تهیهٔ قفل‌ها از نسخهٔ ثبت‌شدهٔ تاریخی زیر گرفته شدند، نه از نسخهٔ ویرایش‌شدهٔ محلی اپراتور. این توضیح منشأ تاریخی قفل‌هاست و وضعیت فعلی فایل را توصیف نمی‌کند.
+
+`586c33fa5e36cd1d54786c377bdd5ba59c049692`
 Every selected version matches the existing generator development environment;
 this work makes no package upgrades. Existing installed versions were only
 selection constraints: acceptance used newly downloaded wheels and empty venvs,

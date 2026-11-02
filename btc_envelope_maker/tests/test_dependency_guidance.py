@@ -59,6 +59,13 @@ def test_legacy_requirements_is_guidance_only():
     assert '--require-hashes' in text
     assert 'requirements-runtime.txt' in text
     assert 'DEPENDENCIES.md' in text
+    guide = (SOURCE / 'DEPENDENCIES.md').read_text()
+    assert 'راهنمای صرف' in guide
+    assert 'مخزن مستقل' in guide
+    assert 'legacy, operator-owned file' not in guide
+    assert '586c33fa5e36cd1d54786c377bdd5ba59c049692' in guide
+    assert "assert record['digests']['sha256'] == artifact['sha256']" in guide
+    assert "assert hashlib.sha256(data).hexdigest() == artifact['sha256']" in guide
 
 
 def test_database_module_help_uses_locked_recovery():
