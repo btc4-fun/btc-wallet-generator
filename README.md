@@ -26,8 +26,15 @@ cp config.example.toml config.toml
 Preview uses a public recovery phrase. **Never fund preview/test addresses.**
 Keep real config, wallets, PDFs, ledgers and databases outside Git; disconnect
 networking and use a trusted offline machine/printer before real generation.
-The legacy requirements.txt was exported from the committed snapshot, not from
-an operator's locally modified dependency file. Use the hash-locked files.
+The legacy requirements.txt is now guidance-only and installs no dependencies.
+Use requirements-runtime.txt with --require-hashes as shown above; dependency
+versions were not upgraded by this security follow-up.
+
+## وضعیت بازبینی امنیتی
+
+مسیر نصب بدون قفل کنار گذاشته شد؛ راهنما، آزمون و چکیدهٔ منشأ فایل‌های تغییرکرده به‌روز شدند. در اجرای کامل محلی، صد‌وپنجاه‌ودو آزمون موفق و یک آزمون اختیاری اجرا نشد. بررسی انتشار منبع و نمایه، هرکدام چهل‌وپنج فایل را بدون تخلف بررسی کردند. این شواهد تأیید تولید کیف پول واقعی یا تضمین امنیت سرمایه نیستند.
+
+دروازهٔ تأیید آفلاین، آزمون آغاز، مجوزهای محدود فایل و پنهان‌بودن عبارت بازیابی در نمایش شیء حفظ شدند. متن کارت دربارهٔ استاندارد بازیابی و گسترش آزمون آغاز برای عبارت بیست‌وچهارکلمه‌ای همچنان نیازمند تصمیم جداگانه‌اند؛ متن چاپی و رفتار تولید تغییر نکرده‌اند.
 
 ## Independent verification
 
