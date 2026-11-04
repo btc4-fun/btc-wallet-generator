@@ -79,9 +79,10 @@ BLACK = HexColor("#111111")
 SHEETS = {"A3": (297, 420), "A4": (210, 297), "A5": (148, 210), "A6": (105, 148), "LETTER": (215.9, 279.4)}
 
 DEFAULTS = {
-    "brand_name": "btc4.fun",
+    # Printed on newly generated cards. Existing PDFs/ledgers are never migrated.
+    "brand_name": "b.tc4fun.ir",
     "tagline": "",
-    "contact": "btc4.fun   |   09113458375@btc4.fun",
+    "contact": "b.tc4fun.ir   |   09113458375@btc4.fun",
     "logo": "",
     "accent_color": "#1f3a5f",
     "serial_prefix": "",

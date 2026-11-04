@@ -20,6 +20,11 @@ def test_every_original_generator_path_has_valid_provenance_and_final_hash():
         assert actual == item['destination_sha256'], item['destination_path']
         if item['adaptation'] == 'unchanged':
             assert actual == item['source_sha256']
-    for name in ('address_validation.py', 'btc_envelope_maker.py', 'btc_db.py'):
+    # Domain branding changes the generator defaults, not the validator or DB layer.
+    for name in ('address_validation.py', 'btc_db.py'):
         entry = next(item for item in generator if item['source_path'] == 'btc_envelope_maker/' + name)
         assert entry['adaptation'] == 'unchanged'
+    entry = next(item for item in generator if item['source_path'] == 'btc_envelope_maker/btc_envelope_maker.py')
+    assert 'b.tc4fun.ir' in entry['adaptation']
+    assert entry['source_git_blob'] == '8bdfb78ad4655c1f8bfcdf98e28510a9c3d6b863'
+    assert entry['source_sha256'] == 'ba28920c681daf903730c294ac510dde5deb111c7262a8534fe6bfde46bbb37e'

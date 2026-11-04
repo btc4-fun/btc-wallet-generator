@@ -1,6 +1,6 @@
 # btc-wallet-generator
 
-Standalone offline Bitcoin paper-wallet generator for btc4.fun. Source-available
+Standalone offline Bitcoin paper-wallet generator for b.tc4fun.ir. Source-available
 under [PolyForm Noncommercial 1.0.0](LICENSE.md); see [NOTICE](NOTICE).
 This repository does not run the website or either Android application.
 
@@ -26,6 +26,11 @@ cp config.example.toml config.toml
 Preview uses a public recovery phrase. **Never fund preview/test addresses.**
 Keep real config, wallets, PDFs, ledgers and databases outside Git; disconnect
 networking and use a trusted offline machine/printer before real generation.
+Newly generated cards use `b.tc4fun.ir` as their printed project domain. This is
+a default for new runs only: existing PDFs, ledgers, and operator config files
+are not rewritten. The separate address-verification QR remains configured by
+`explorer_url` (mempool.space in the example) and is not replaced by the
+project domain.
 The legacy requirements.txt is now guidance-only and installs no dependencies.
 Use requirements-runtime.txt with --require-hashes as shown above; dependency
 versions were not upgraded by this security follow-up.

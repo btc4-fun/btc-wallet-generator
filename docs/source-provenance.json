@@ -17,8 +17,8 @@
       "destination_path": "btc_envelope_maker/README.md",
       "source_sha256": "64a3124ec4ac0de0352b1e3c17c74b99cd9349adaae8a469ccd9598b5273ce01",
       "source_git_blob": "16b72f1d6d22349da2d7f31c68447c0cc655c4dc",
-      "destination_sha256": "64a3124ec4ac0de0352b1e3c17c74b99cd9349adaae8a469ccd9598b5273ce01",
-      "adaptation": "unchanged"
+      "destination_sha256": "fd3e651d56d151ba8e2a9ca98e18ab974c8cf1ec04b57fa582d23cf9c228cec5",
+      "adaptation": "Document new-output domain and printable contact default b.tc4fun.ir; preserve existing configurations and original source provenance."
     },
     {
       "source_path": "btc_envelope_maker/address_validation.py",
@@ -41,16 +41,16 @@
       "destination_path": "btc_envelope_maker/btc_envelope_maker.py",
       "source_sha256": "ba28920c681daf903730c294ac510dde5deb111c7262a8534fe6bfde46bbb37e",
       "source_git_blob": "8bdfb78ad4655c1f8bfcdf98e28510a9c3d6b863",
-      "destination_sha256": "ba28920c681daf903730c294ac510dde5deb111c7262a8534fe6bfde46bbb37e",
-      "adaptation": "unchanged"
+      "destination_sha256": "90ff3e088a521f21543919e3903e3a26a84bb9ccdd00d6954ac94e1fb89a8066",
+      "adaptation": "Change new-output brand and printable contact website defaults to b.tc4fun.ir; retain existing operator config and email."
     },
     {
       "source_path": "btc_envelope_maker/config.example.toml",
       "destination_path": "btc_envelope_maker/config.example.toml",
       "source_sha256": "dbdcafae7aebfc0c20e3b4a7cd2806d55467678ed025a5ac2915ca8feeca1eb8",
       "source_git_blob": "7a7c569bf6d646ec6e44e13ba6ec6d6a3bfce245",
-      "destination_sha256": "dbdcafae7aebfc0c20e3b4a7cd2806d55467678ed025a5ac2915ca8feeca1eb8",
-      "adaptation": "unchanged"
+      "destination_sha256": "0215287c5f22da923bfee75ea8fe398246415d8f0f6ab79421375a07d02e8292",
+      "adaptation": "Align example brand and printable contact website with b.tc4fun.ir, retaining email and explorer URL."
     },
     {
       "source_path": "btc_envelope_maker/fonts/LICENSE",
