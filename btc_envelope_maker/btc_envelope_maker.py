@@ -79,10 +79,9 @@ BLACK = HexColor("#111111")
 SHEETS = {"A3": (297, 420), "A4": (210, 297), "A5": (148, 210), "A6": (105, 148), "LETTER": (215.9, 279.4)}
 
 DEFAULTS = {
-    # Printed on newly generated cards. Existing PDFs/ledgers are never migrated.
-    "brand_name": "b.tc4fun.ir",
+    "brand_name": "btc4.fun",
     "tagline": "",
-    "contact": "b.tc4fun.ir   |   09113458375@btc4.fun",
+    "contact": "btc4.fun   |   09113458375@btc4.fun",
     "logo": "",
     "accent_color": "#1f3a5f",
     "serial_prefix": "",
@@ -109,7 +108,39 @@ DEFAULTS = {
     "label_private_qr": "QR",
     "db_url": "",
     "db_table": "wallets",
+    "public_notes": "",
+    "site_key": "",
+    "site_url": "",
+    "image_url": "",
+    "public_url_hosts": "",
 }
+
+# Hosts allowed for the optional public site_url / image_url values.
+PUBLIC_URL_HOSTS = frozenset({"btc4.fun", "btc.saeb.id.ir", "b.tc4fun.ir"})
+SITE_KEY_RE = re.compile(r"[A-Za-z0-9._-]{1,64}")
+# Control and format characters (incl. bidi overrides) are never allowed in public text.
+_UNSAFE_TEXT = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]")
+
+
+def public_url_hosts(cfg: dict) -> frozenset[str]:
+    extra = cfg.get("public_url_hosts") or ""
+    if isinstance(extra, str):
+        extra = [h.strip().lower() for h in extra.split(",") if h.strip()]
+    return PUBLIC_URL_HOSTS | frozenset(str(h).strip().lower() for h in extra if str(h).strip())
+
+
+def valid_public_url(value: str, hosts: frozenset[str]) -> bool:
+    """https only, no userinfo/port/query/fragment, host in the allowlist."""
+    if len(value) > 512 or _UNSAFE_TEXT.search(value) or any(c.isspace() for c in value):
+        return False
+    try:
+        parts = urlparse(value)
+        port = parts.port
+    except ValueError:
+        return False
+    return (parts.scheme == "https" and bool(parts.hostname) and parts.hostname.lower() in hosts
+            and port is None and not parts.username and not parts.password
+            and not parts.query and not parts.fragment and parts.path.startswith("/"))
 
 HERE = Path(__file__).resolve().parent
 # (regular, bold) font pairs that contain Persian letters. First hit wins.
@@ -169,6 +200,22 @@ def load_config(path: Path) -> dict:
         need(isinstance(cfg[k], (int, float)) and cfg[k] >= lo, f"'{k}' must be a number >= {lo}.")
     need(isinstance(cfg["inside_instructions"], (list, str)), "'inside_instructions' must be a list of strings.")
     sheet_dims(cfg["sheet_size"])
+
+    # Optional public metadata: empty means NULL; never private contact data.
+    for k in ("public_notes", "site_key", "site_url", "image_url", "public_url_hosts"):
+        need(isinstance(cfg[k], str), f"'{k}' must be a string.")
+        cfg[k] = cfg[k].strip()
+    need(len(cfg["public_notes"]) <= 500, "'public_notes' must be at most 500 characters.")
+    need(not _UNSAFE_TEXT.search(cfg["public_notes"]), "'public_notes' must not contain control or format characters.")
+    need(not cfg["site_key"] or SITE_KEY_RE.fullmatch(cfg["site_key"]) is not None,
+         "'site_key' must be 1-64 characters: A-Z a-z 0-9 . _ -")
+    hosts = public_url_hosts(cfg)
+    for k in ("site_url", "image_url"):
+        need(not cfg[k] or valid_public_url(cfg[k], hosts),
+             f"'{k}' must be an https URL (max 512 chars, no userinfo/port/query) on an allowed host: "
+             + ", ".join(sorted(hosts)))
+    need(bool(cfg["site_key"]) == bool(cfg["site_url"]),
+         "'site_key' and 'site_url' must be set together or both left empty.")
 
     cfg["_logo"] = None
     if cfg.get("logo"):
@@ -869,7 +916,11 @@ def main() -> None:
     db_msg = ""
     if db_url and not args.preview:      # only AFTER the files exist; only serial + public address are passed
         try:
-            rows = [btc_db.Row(r.serial, r.address, human, created) for r in wallets]
+            # Optional public metadata comes from CONFIG only (never from private
+            # contact columns); blank values are stored as NULL by btc_db.
+            rows = [btc_db.Row(r.serial, r.address, human, created,
+                               cfg["public_notes"] or None, cfg["site_key"] or None,
+                               cfg["site_url"] or None, cfg["image_url"] or None) for r in wallets]
             n_ins, _ = btc_db.save_rows(db_url, db_table, rows)
             db_msg = f"Database: {n_ins} wallet(s) saved to table '{db_table}' ({btc_db.describe(db_url)})"
         except btc_db.DbError as e:

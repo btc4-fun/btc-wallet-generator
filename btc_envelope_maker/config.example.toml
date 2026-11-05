@@ -1,6 +1,6 @@
-brand_name = "b.tc4fun.ir"
+brand_name = "btc4.fun"
 tagline = "بیت‌کوین کاغذی"
-contact = "b.tc4fun.ir   |   09113458375@btc4.fun"
+contact = "btc4.fun   |   09113458375@btc4.fun"
 logo = "logo.png"
 accent_color = "#1f3a5f"
 serial_prefix = ""
@@ -32,3 +32,12 @@ inside_instructions = [
 # Never put a real database password into a committed configuration.
 db_url = ""
 db_table = "wallets"
+
+# Optional PUBLIC metadata shown on the customer page and in the app.
+# Leave empty to store NULL. Never put private contact details or secrets here.
+public_notes = ""   # free text, up to 500 characters, newlines allowed
+site_key = ""       # short label, up to 64 chars: A-Z a-z 0-9 . _ -
+site_url = ""       # https only, up to 512 chars, host must be in the allowlist
+image_url = ""      # https only, up to 512 chars, host must be in the allowlist
+# Extra hosts allowed for site_url/image_url (comma separated, https only).
+public_url_hosts = ""

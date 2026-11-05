@@ -17,8 +17,8 @@ class GeneratorBrandingContract(unittest.TestCase):
         defaults = ast.literal_eval(assignment.value)
         example = tomllib.loads((ROOT / 'btc_envelope_maker/config.example.toml').read_text())
         for config in (defaults, example):
-            self.assertEqual(config['brand_name'], 'b.tc4fun.ir')
-            self.assertEqual(config['contact'], 'b.tc4fun.ir   |   09113458375@btc4.fun')
+            self.assertEqual(config['brand_name'], 'btc4.fun')
+            self.assertEqual(config['contact'], 'btc4.fun   |   09113458375@btc4.fun')
             self.assertEqual(config['db_url'], '')
             self.assertEqual(config['explorer_url'], 'https://mempool.space/address/')
 

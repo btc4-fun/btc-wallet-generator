@@ -33,24 +33,24 @@
       "destination_path": "btc_envelope_maker/btc_db.py",
       "source_sha256": "d0bd597d80751d0dbb822f14ba81ef634724b769672830287a9a201d05549369",
       "source_git_blob": "74c81c01c77fcc717099ef6d9b6ce4f29c379bbd",
-      "destination_sha256": "d0bd597d80751d0dbb822f14ba81ef634724b769672830287a9a201d05549369",
-      "adaptation": "unchanged"
+      "destination_sha256": "aae78acc1688a7f54bb32f5aa9a4b497b96b190e77bfff890b98a4f9f56ad882",
+      "adaptation": "Add four optional public metadata columns (public_notes, site_key, site_url, image_url), an explicit migrate_public_columns()/migrate-public path, optional CSV columns and NULL-for-blank storage; private contact columns untouched."
     },
     {
       "source_path": "btc_envelope_maker/btc_envelope_maker.py",
       "destination_path": "btc_envelope_maker/btc_envelope_maker.py",
       "source_sha256": "ba28920c681daf903730c294ac510dde5deb111c7262a8534fe6bfde46bbb37e",
       "source_git_blob": "8bdfb78ad4655c1f8bfcdf98e28510a9c3d6b863",
-      "destination_sha256": "90ff3e088a521f21543919e3903e3a26a84bb9ccdd00d6954ac94e1fb89a8066",
-      "adaptation": "Change new-output brand and printable contact website defaults to b.tc4fun.ir; retain existing operator config and email."
+      "destination_sha256": "d3b6be40a714bf5e1f9b1f0c348c579e3ed9625cf640c3f8ba64ad1e8cef5363",
+      "adaptation": "Change new-output brand and printable contact website defaults to b.tc4fun.ir; retain existing operator config and email. Add optional public metadata config keys with https/host validation and pass them to the database row."
     },
     {
       "source_path": "btc_envelope_maker/config.example.toml",
       "destination_path": "btc_envelope_maker/config.example.toml",
       "source_sha256": "dbdcafae7aebfc0c20e3b4a7cd2806d55467678ed025a5ac2915ca8feeca1eb8",
       "source_git_blob": "7a7c569bf6d646ec6e44e13ba6ec6d6a3bfce245",
-      "destination_sha256": "0215287c5f22da923bfee75ea8fe398246415d8f0f6ab79421375a07d02e8292",
-      "adaptation": "Align example brand and printable contact website with b.tc4fun.ir, retaining email and explorer URL."
+      "destination_sha256": "aed0f1c3003cf344847565e5284d68f6acb31c24e2ba27c97332814c2befee2f",
+      "adaptation": "Align example brand and printable contact website with b.tc4fun.ir, retaining email and explorer URL. Document the optional public metadata keys."
     },
     {
       "source_path": "btc_envelope_maker/fonts/LICENSE",
@@ -257,8 +257,8 @@
       "destination_path": "btc_envelope_maker/tests/test_wallet_metadata_schema.py",
       "source_sha256": "c309f0de9dfb4022f3c849f3a13531af0895454777f9ca6277db63e75b50363d",
       "source_git_blob": "113fc3f080c7ae063fc97bba49bf811b7329a0c5",
-      "destination_sha256": "c309f0de9dfb4022f3c849f3a13531af0895454777f9ca6277db63e75b50363d",
-      "adaptation": "unchanged"
+      "destination_sha256": "3cc4442a0473796a86b83aabc17e44679e271602b24a867f2872f90822ead7fb",
+      "adaptation": "Extend the schema contract to the four optional public metadata columns and the extended Row field list; private contact assertions unchanged."
     }
   ]
 }

@@ -8,6 +8,13 @@ also hold nullable PRIVATE contact_type, contact_value and notes (TEXT) for an
 administrator's use. They are not public ledger data: Row, CSV import and list
 never accept, select or export them. Never store recovery words or private keys.
 
+OPTIONAL PUBLIC metadata - public_notes, site_key, site_url, image_url (TEXT,
+default NULL) - is owner-supplied public display data for the customer page and
+app. It is separate from the private contact columns and only the explicit
+batch-write path (save_rows with these Row fields set) stores it; empty values
+are written as NULL, never as an empty string. list/import do not print them
+beyond the explicit optional CSV columns.
+
 Connection strings
   SQLite   : sqlite:///wallets.db          (relative path)
              sqlite:////home/me/wallets.db (absolute path: four slashes)
@@ -25,6 +32,7 @@ Stand-alone use (needs psycopg only for Postgres):
   python btc_db.py import out/batch_0587k4530/ledger.csv --db "postgresql://..."
   python btc_db.py list --db "sqlite:///wallets.db"
   python btc_db.py migrate-contact --db "sqlite:///wallets.db"  # owner/admin only
+  python btc_db.py migrate-public --db "sqlite:///wallets.db"   # optional public columns
 """
 from __future__ import annotations
 
@@ -67,13 +75,32 @@ def _safe_errors(function):
     return guarded
 
 
+PUBLIC_COLUMNS = ("public_notes", "site_key", "site_url", "image_url")
+
+
+def _public_value(value) -> str | None:
+    """Optional public text: strip, and a blank value becomes NULL (never '')."""
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
 @dataclass(frozen=True)
 class Row:
-    """Public ledger input only: no contact metadata, recovery words or keys."""
+    """Public ledger input only: no contact metadata, recovery words or keys.
+
+    The four optional public fields are owner-supplied display data. They are
+    NEVER populated from private contact columns; only explicit CSV columns or
+    the explicit batch-write path set them."""
     serial: str
     address: str
     jalali_datetime: str = ""
     created_utc: str = ""          # "YYYY-MM-DD HH:MM:SS UTC" (same text as in ledger.csv)
+    public_notes: str | None = None
+    site_key: str | None = None
+    site_url: str | None = None
+    image_url: str | None = None
 
 
 # --------------------------------------------------------------------------------------
@@ -166,7 +193,9 @@ def _ddl(kind: str, table: str) -> str:
     ts = "TEXT" if kind == "sqlite" else "TIMESTAMPTZ"
     return (f"CREATE TABLE IF NOT EXISTS {table} (serial TEXT PRIMARY KEY, address TEXT NOT NULL UNIQUE, "
             f"jalali_datetime TEXT, created_utc {ts}, contact_type TEXT DEFAULT NULL, "
-            "contact_value TEXT DEFAULT NULL, notes TEXT DEFAULT NULL)")
+            "contact_value TEXT DEFAULT NULL, notes TEXT DEFAULT NULL, "
+            "public_notes TEXT DEFAULT NULL, site_key TEXT DEFAULT NULL, "
+            "site_url TEXT DEFAULT NULL, image_url TEXT DEFAULT NULL)")
 
 
 @_safe_errors
@@ -253,6 +282,84 @@ def migrate_contact_columns(url: str, table: str = DEFAULT_TABLE) -> None:
         conn.close()
 
 
+@_safe_errors
+def migrate_public_columns(url: str, table: str = DEFAULT_TABLE) -> None:
+    """Explicit, idempotent, locked migration that adds ONLY the four public columns.
+
+    Adds public_notes, site_key, site_url, image_url as nullable TEXT DEFAULT NULL
+    on an existing wallets table. Never touches contact_type/contact_value/notes,
+    never reads or updates row values, and never grants permissions. Re-running on
+    an already-migrated table is a no-op. SQLite uses BEGIN IMMEDIATE; PostgreSQL
+    uses SET LOCAL lock_timeout=2s, statement_timeout=10s and an ACCESS EXCLUSIVE
+    table lock. Returns None; incompatible schema or failure raises a value-free
+    DbError and rolls back.
+    """
+    check_table(table)
+    kind, target = parse_url(url)
+    try:
+        conn = _connect(kind, target)
+    except Exception:
+        raise DbError("cannot connect for public metadata migration") from None
+    try:
+        cur = conn.cursor()
+        if kind == "sqlite":
+            cur.execute("BEGIN IMMEDIATE")
+            cur.execute("SELECT type FROM sqlite_master WHERE name = ? COLLATE NOCASE", (table,))
+            if cur.fetchone() != ("table",):
+                raise DbError("existing wallet table not found; nothing was changed")
+            cur.execute(f'PRAGMA table_info("{table}")')
+            columns = {row[1].lower(): row for row in cur.fetchall()}
+            if not {"serial", "address", "jalali_datetime", "created_utc"}.issubset(columns):
+                raise DbError("existing table is missing public ledger columns; nothing was changed")
+            for name in PUBLIC_COLUMNS:
+                if name in columns:
+                    column = columns[name]
+                    default = column[4]
+                    if (column[2].strip().upper() != "TEXT" or column[3] or column[5]
+                            or (default is not None and default.strip().upper() != "NULL")):
+                        raise DbError("incompatible public metadata schema; nothing was changed")
+            for name in PUBLIC_COLUMNS:
+                if name not in columns:
+                    cur.execute(f'ALTER TABLE "{table}" ADD COLUMN {name} TEXT DEFAULT NULL')
+        else:
+            cur.execute("SET LOCAL lock_timeout = '2s'")
+            cur.execute("SET LOCAL statement_timeout = '10s'")
+            cur.execute("SELECT n.nspname, c.relname FROM pg_catalog.pg_class c "
+                        "JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace "
+                        "WHERE c.oid = pg_catalog.to_regclass(%s) AND c.relkind = 'r'", (table,))
+            relation = cur.fetchone()
+            if relation is None:
+                raise DbError("existing wallet table not found; nothing was changed")
+            qualified = ".".join('"' + name.replace('"', '""') + '"' for name in relation)
+            cur.execute(f"LOCK TABLE ONLY {qualified} IN ACCESS EXCLUSIVE MODE")
+            cur.execute("SELECT a.attname, a.atttypid = 'pg_catalog.text'::pg_catalog.regtype, "
+                        "a.attnotnull, pg_catalog.pg_get_expr(d.adbin, d.adrelid), "
+                        "a.attidentity, a.attgenerated FROM pg_catalog.pg_attribute a "
+                        "LEFT JOIN pg_catalog.pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum "
+                        "WHERE a.attrelid = pg_catalog.to_regclass(%s) "
+                        "AND a.attnum > 0 AND NOT a.attisdropped", (qualified,))
+            columns = {row[0]: row for row in cur.fetchall()}
+            if not {"serial", "address", "jalali_datetime", "created_utc"}.issubset(columns):
+                raise DbError("existing table is missing public ledger columns; nothing was changed")
+            for name in PUBLIC_COLUMNS:
+                if name in columns:
+                    _, is_text, not_null, default, identity, generated = columns[name]
+                    if (not is_text or not_null or identity or generated
+                            or default not in (None, "NULL::text")):
+                        raise DbError("incompatible public metadata schema; nothing was changed")
+            for name in PUBLIC_COLUMNS:
+                cur.execute(f"ALTER TABLE ONLY {qualified} ADD COLUMN IF NOT EXISTS {name} TEXT DEFAULT NULL")
+        conn.commit()
+    except DbError:
+        conn.rollback()
+        raise
+    except Exception:
+        conn.rollback()
+        raise DbError("public metadata migration failed; nothing was changed") from None
+    finally:
+        conn.close()
+
+
 def _created_value(kind: str, text: str):
     if not text:
         return None
@@ -284,8 +391,9 @@ def check(url: str, table: str = DEFAULT_TABLE) -> None:
 def save_rows(url: str, table: str, rows: list[Row], *, skip_existing: bool = False) -> tuple[int, int]:
     """Insert rows in ONE transaction (all or nothing). Returns (inserted, already_present).
 
-    Only public ledger columns are written. Existing tables are never migrated;
-    existing private metadata is neither read nor overwritten.
+    Only public ledger columns plus the four optional public metadata columns are
+    written. Existing tables are never migrated; existing private metadata is
+    neither read nor overwritten. Blank public values are stored as NULL.
 
     skip_existing=False: any duplicate serial/address is an error and nothing is written.
     skip_existing=True : a serial that is already stored with the SAME address is skipped (re-import is safe);
@@ -295,16 +403,27 @@ def save_rows(url: str, table: str, rows: list[Row], *, skip_existing: bool = Fa
     for row in rows:
         if not valid_inventory_address(row.address):
             raise DbError("invalid inventory address or public test vector; nothing was written")
+    # Only a batch that actually sets optional public fields writes them, so an
+    # existing pre-migration table stays usable for plain ledger inserts
+    # (save_rows never migrates). Empty values become NULL.
+    with_public = any(_public_value(getattr(row, name, None)) is not None for row in rows for name in PUBLIC_COLUMNS)
     kind, target = parse_url(url)
     conn = _connect(kind, target)
     ph = "?" if kind == "sqlite" else "%s"
-    ins = f"INSERT INTO {table} (serial, address, jalali_datetime, created_utc) VALUES ({ph}, {ph}, {ph}, {ph})"
+    if with_public:
+        ins = (f"INSERT INTO {table} (serial, address, jalali_datetime, created_utc, "
+               f"{', '.join(PUBLIC_COLUMNS)}) "
+               f"VALUES ({', '.join([ph] * (4 + len(PUBLIC_COLUMNS)))})")
+    else:
+        ins = f"INSERT INTO {table} (serial, address, jalali_datetime, created_utc) VALUES ({ph}, {ph}, {ph}, {ph})"
     inserted = skipped = 0
     try:
         cur = conn.cursor()
         cur.execute(_ddl(kind, table))
         for r in rows:
             vals = (r.serial, r.address, r.jalali_datetime or None, _created_value(kind, r.created_utc))
+            if with_public:
+                vals += tuple(_public_value(getattr(r, name, None)) for name in PUBLIC_COLUMNS)
             if not skip_existing:
                 cur.execute(ins, vals)
                 inserted += 1
@@ -356,8 +475,14 @@ def read_ledger(path: Path) -> list[Row]:
             serial, addr = (d.get("serial") or "").strip(), (d.get("address") or "").strip()
             if not serial or not valid_inventory_address(addr):
                 raise DbError(f"ledger line {n}: invalid serial/address or public test vector")
+            # Optional public columns are read only when the CSV header names them
+            # explicitly; private contact columns are never consulted.
             rows.append(Row(serial, addr, (d.get("jalali_datetime") or "").strip(),
-                            (d.get("created_utc") or "").strip()))
+                            (d.get("created_utc") or "").strip(),
+                            _public_value(d.get("public_notes")),
+                            _public_value(d.get("site_key")),
+                            _public_value(d.get("site_url")),
+                            _public_value(d.get("image_url"))))
     if not rows:
         raise DbError("ledger contains no rows")
     return rows
@@ -381,7 +506,8 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name, helptext in (("import", "load a ledger.csv into the database (safe to repeat)"),
                            ("list", "show the newest public records"),
-                           ("migrate-contact", "administrator only: add private metadata columns to an existing table")):
+                           ("migrate-contact", "administrator only: add private metadata columns to an existing table"),
+                           ("migrate-public", "add the four optional public metadata columns to an existing table")):
         p = sub.add_parser(name, help=helptext)
         if name == "import":
             p.add_argument("ledger", help="path to ledger.csv")
@@ -400,6 +526,9 @@ def main(argv: list[str] | None = None) -> int:
         elif a.cmd == "migrate-contact":
             migrate_contact_columns(url, a.table)
             print("private contact metadata schema ready (no values read or written)")
+        elif a.cmd == "migrate-public":
+            migrate_public_columns(url, a.table)
+            print("public metadata schema ready (no values read or written)")
         else:
             for r in list_rows(url, a.table, a.limit):
                 print("  ".join("" if v is None else str(v) for v in r))
