@@ -194,7 +194,8 @@ def load_config(path: Path) -> dict:
     need(cfg["words"] in (12, 24), "'words' must be 12 or 24.")
     need(cfg["layout"] in ("pairs", "separate"), "'layout' must be \"pairs\" or \"separate\".")
     need(cfg["pair_direction"] in ("auto", "side", "stack"), "'pair_direction' must be auto, side or stack.")
-    need(cfg["serial_minsec"] in ("digits", "compact"), "'serial_minsec' must be \"digits\" or \"compact\".")
+    need(cfg["serial_minsec"] in ("digits", "compact", "short"),
+         "'serial_minsec' must be \"digits\", \"compact\" or \"short\".")
     need(cfg["private_qr"] in ("words", "none"), "'private_qr' must be \"words\" or \"none\".")
     for k, lo in (("card_width_mm", 80), ("card_height_mm", 50), ("sheet_margin_mm", 0), ("card_gap_mm", 0)):
         need(isinstance(cfg[k], (int, float)) and cfg[k] >= lo, f"'{k}' must be a number >= {lo}.")
@@ -350,6 +351,53 @@ def serial_stem(now: dt.datetime, mode: str = "digits") -> tuple[str, str]:
     stem = f"{jy % 100:02d}{enc1(jm)}{enc1(jd)}{enc_hour(now.hour)}{enc_ms(now.minute, mode)}{enc_ms(now.second, mode)}"
     human = f"{jy:04d}/{jm:02d}/{jd:02d} {now:%H:%M:%S}"
     return stem, human
+
+
+def serial_stem_short(now: dt.datetime, counter: int = 0) -> tuple[str, str]:
+    """Short stem: Y(1,base36) + M(1) + D(1) + H(1) + X(1,base36).
+
+    Y is the Jalali year mod 100 in base36 (1406 -> '6'), supporting 36 years
+    from 1406 to 1441 with no uppercase letters. X is a per-hour counter
+    (0..35) chosen by the caller from existing batch_* folders; it is NOT
+    derived from the clock, so two runs in the same hour must pass distinct
+    counters. The human-readable date keeps full precision.
+    """
+    if not 0 <= counter < 36:
+        raise ValueError("counter must be 0..35 (single base36 char)")
+    jy, jm, jd = gregorian_to_jalali(now.year, now.month, now.day)
+    stem = f"{to_b36(jy % 100, 1)}{enc1(jm)}{enc1(jd)}{enc_hour(now.hour)}{to_b36(counter, 1)}"
+    human = f"{jy:04d}/{jm:02d}/{jd:02d} {now:%H:%M:%S}"
+    return stem, human
+
+
+def next_free_counter(out_root: Path, now: dt.datetime) -> int:
+    """First unused X (0..35) for this hour, from existing batch_* folders.
+
+    No database and no persistent state: the output root itself is the ledger.
+    Only folders named batch_<Y><M><D><H><X>... for the same hour prefix count.
+    Raises ValueError when all 36 slots for the hour are taken.
+    """
+    jy, jm, jd = gregorian_to_jalali(now.year, now.month, now.day)
+    prefix = f"{to_b36(jy % 100, 1)}{enc1(jm)}{enc1(jd)}{enc_hour(now.hour)}"
+    used: set[int] = set()
+    try:
+        entries = list(out_root.iterdir())
+    except FileNotFoundError:
+        entries = []
+    for entry in entries:
+        name = entry.name
+        if not name.startswith("batch_"):
+            continue
+        tail = name[len("batch_"):]
+        if len(tail) < 5 or tail[:4] != prefix:
+            continue
+        x = tail[4]
+        if x in _B36:
+            used.add(_B36.index(x))
+    for candidate in range(36):
+        if candidate not in used:
+            return candidate
+    raise ValueError("all 36 serial slots for this hour are used; wait for the next hour")
 
 
 def now_local(cfg: dict) -> dt.datetime:
@@ -833,7 +881,11 @@ def main() -> None:
             sys.exit(f"Database setting problem: {e}")
 
     now = now_local(cfg)
-    stem, human = serial_stem(now, cfg["serial_minsec"])
+    if cfg["serial_minsec"] == "short":
+        counter = next_free_counter(Path(args.out), now)
+        stem, human = serial_stem_short(now, counter)
+    else:
+        stem, human = serial_stem(now, cfg["serial_minsec"])
     width = serial_width(plan.per_sheet)
 
     def samples(n: int) -> list[Wallet]:

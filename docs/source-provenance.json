@@ -41,8 +41,8 @@
       "destination_path": "btc_envelope_maker/btc_envelope_maker.py",
       "source_sha256": "ba28920c681daf903730c294ac510dde5deb111c7262a8534fe6bfde46bbb37e",
       "source_git_blob": "8bdfb78ad4655c1f8bfcdf98e28510a9c3d6b863",
-      "destination_sha256": "d3b6be40a714bf5e1f9b1f0c348c579e3ed9625cf640c3f8ba64ad1e8cef5363",
-      "adaptation": "Change new-output brand and printable contact website defaults to b.tc4fun.ir; retain existing operator config and email. Add optional public metadata config keys with https/host validation and pass them to the database row."
+      "destination_sha256": "a7de1c5d2a509c59d91fa958d5408aad2e48efb9458768929119629c770626b0",
+      "adaptation": "Change new-output brand and printable contact website defaults to b.tc4fun.ir; retain existing operator config and email. Add optional public metadata config keys with https/host validation and pass them to the database row. Add serial_minsec mode 'short': 5-char stem Y(1,base36)+M+D+H+X(1,base36) with a per-hour counter derived from existing batch_* folders (no DB); digits/compact modes retained."
     },
     {
       "source_path": "btc_envelope_maker/config.example.toml",
@@ -73,8 +73,8 @@
       "destination_path": "btc_envelope_maker/logo.png",
       "source_sha256": "430bc96cf01c3e69e451080c00580cf1afea1eaf58c638b876ce8b597e9aff6c",
       "source_git_blob": "ce8597f0de35c682254f81263fb6ad9e089f9a9a",
-      "destination_sha256": "430bc96cf01c3e69e451080c00580cf1afea1eaf58c638b876ce8b597e9aff6c",
-      "adaptation": "unchanged"
+      "destination_sha256": "f97c74cc7c60fa0d52138e8c889fe5a4c1fc679716ed92e0c6807c3c8116ac0b",
+      "adaptation": "Updated brand logo artwork; source snapshot retained for attribution."
     },
     {
       "source_path": "btc_envelope_maker/nfc_bindings.py",
