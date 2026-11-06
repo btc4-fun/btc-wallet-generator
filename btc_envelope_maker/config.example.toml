@@ -4,6 +4,9 @@ contact = "btc4.fun   |   09113458375@btc4.fun"
 logo = "logo.png"
 accent_color = "#1f3a5f"
 serial_prefix = ""
+# "digits" (default, 9-char stem) | "compact" (7-char stem) | "short" (5-char stem)
+# "short" = Y(1,base36)+M+D+H+X(1,base36); X is the first free slot for the hour,
+# read from existing batch_* folders (no DB, no state). Max 36 runs per hour.
 serial_minsec = "digits"
 timezone = "Asia/Tehran"
 words = 12
