@@ -17,7 +17,7 @@
       "destination_path": "btc_envelope_maker/README.md",
       "source_sha256": "64a3124ec4ac0de0352b1e3c17c74b99cd9349adaae8a469ccd9598b5273ce01",
       "source_git_blob": "16b72f1d6d22349da2d7f31c68447c0cc655c4dc",
-      "destination_sha256": "cd6f7f99366d8d59edb4edc99e31a80fb65732b2cb584f8a5f4cf3905bdbbcd9",
+      "destination_sha256": "b1c0007c4420340bcb39f2d651994ef618623e133ed84cf7f49752931242849b",
       "adaptation": "Document new-output domain and printable contact default b.tc4fun.ir; preserve existing configurations and original source provenance. Document the serial_minsec \"short\" mode (5-char stem, 36 runs/hour, legacy 9-char still accepted). Document the optional public metadata keys (public_notes, site_key, site_url, image_url, public_url_hosts) and their limits."
     },
     {

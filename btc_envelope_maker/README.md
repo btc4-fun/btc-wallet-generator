@@ -99,9 +99,35 @@
 | `public_url_hosts` | میزبان‌های اضافی مجاز، جداشده با ویرگول | فقط `https` |
 
 - `site_key` و `site_url` یا هر دو با هم پر می‌شوند یا هر دو خالی می‌مانند.
+- نشانی سایت به برچسب سایت مقید است: میزبان `site_url` باید برابر `site_key` باشد یا با `site_key + "."` شروع شود. پس `site_key = "btc4.fun"` با `site_url = "https://btc4.fun/"` جفت می‌شود و `site_key = "shop"` با `https://shop.example.com/`؛ ترکیب ناهمخوان رد می‌شود تا این ستون‌ها واقعاً جفت «نام سایت / نشانی سایت» باشند.
 - میزبان‌های مجاز پیش‌فرض: `btc4.fun`، `btc.saeb.id.ir`، `b.tc4fun.ir`.
 - این مقدارها فقط متن عمومی‌اند؛ اثبات اصالت یا موجودی نیستند. هرگز اطلاعات تماس خصوصی یا راز در آن‌ها نگذارید.
 - `config.example.toml` عمداً این کلیدها را خالی نگه می‌دارد؛ مقدار واقعی را فقط در `config.toml` محلی بگذارید.
+
+### فهرست لینک‌ها (`[public_links]`)
+
+جدول اختیاری `[public_links]` در `config.toml` فهرستی از کلید/مقدار برای شبکه‌های اجتماعی و راه‌های تماس است. سایت آن را در صفحهٔ استعلام و پاسخ API زیر کلید `links` نشان می‌دهد و اپ مشتری هم با تأیید کاربر بازش می‌کند.
+
+```toml
+[public_links]
+instagram = "https://instagram.com/btc4fun"
+telegram  = "https://t.me/btc4fun"
+youtube   = "https://youtube.com/@btc4fun"
+```
+
+- حداکثر ۲۰ ورودی.
+- کلید: ۱ تا ۳۲ نویسه از `a-z 0-9 . _ -` که با حرف یا رقم شروع شود؛ به lowercase تبدیل می‌شود.
+- مقدار: نشانی `https` مطلق، بدون نویسهٔ کنترلی، جهت‌دهی یا فرمت.
+- ورودی نامعتبر فقط خودش دور ریخته می‌شود؛ بقیهٔ فهرست می‌ماند.
+- در پایگاه داده در ستون `public_links` به‌صورت JSON ذخیره می‌شود. برای ساخت این ستون روی جدول موجود: `python btc_db.py migrate-public --db "…"`.
+
+### خروجی CSV فهرست کارت‌ها
+
+```sh
+python btc_db.py export --db "postgresql://…/d_bitcoin4fun" --out wallets.csv --limit 1000
+```
+
+ستون‌ها: `serial, address, jalali_datetime, created_utc, site_key, site_url, image_url, public_notes, public_links`. لینک‌ها به شکل `key=value;key=value` تخت می‌شوند و فایل با BOM UTF-8 نوشته می‌شود. ستون‌های تماس خصوصی و `nfc_uid` در خروجی نیستند. این خروجی برای بازبینی فهرست است، نه جایگزین `ledger.csv` که ستون‌های خریدار و txid را هم دارد.
 
 ## ۱. نصب (یک بار)
 
