@@ -218,6 +218,16 @@ class ConfigValidationTests(unittest.TestCase):
             public_url_hosts="shop.example.invalid"))
         self.assertEqual(cfg["site_url"], "https://shop.example.invalid/")
 
+    def test_shipped_example_config_keeps_public_metadata_empty(self):
+        # The example is committed and public: it must never carry a real
+        # note, site or image, and it must still load without errors.
+        example = PACKAGE / "config.example.toml"
+        cfg = generator.load_config(example)
+        for name in OPTIONAL:
+            with self.subTest(name=name):
+                self.assertEqual(cfg[name], "")
+        self.assertEqual(cfg["public_url_hosts"], "")
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-q"])
