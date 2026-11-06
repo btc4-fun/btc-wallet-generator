@@ -17,8 +17,8 @@
       "destination_path": "btc_envelope_maker/README.md",
       "source_sha256": "64a3124ec4ac0de0352b1e3c17c74b99cd9349adaae8a469ccd9598b5273ce01",
       "source_git_blob": "16b72f1d6d22349da2d7f31c68447c0cc655c4dc",
-      "destination_sha256": "fd3e651d56d151ba8e2a9ca98e18ab974c8cf1ec04b57fa582d23cf9c228cec5",
-      "adaptation": "Document new-output domain and printable contact default b.tc4fun.ir; preserve existing configurations and original source provenance."
+      "destination_sha256": "53304731175df2bddb33746eeb49b2e262a46e46f000f503aea265a090017bf7",
+      "adaptation": "Document new-output domain and printable contact default b.tc4fun.ir; preserve existing configurations and original source provenance. Document the serial_minsec \"short\" mode (5-char stem, 36 runs/hour, legacy 9-char still accepted)."
     },
     {
       "source_path": "btc_envelope_maker/address_validation.py",
@@ -49,8 +49,8 @@
       "destination_path": "btc_envelope_maker/config.example.toml",
       "source_sha256": "dbdcafae7aebfc0c20e3b4a7cd2806d55467678ed025a5ac2915ca8feeca1eb8",
       "source_git_blob": "7a7c569bf6d646ec6e44e13ba6ec6d6a3bfce245",
-      "destination_sha256": "aed0f1c3003cf344847565e5284d68f6acb31c24e2ba27c97332814c2befee2f",
-      "adaptation": "Align example brand and printable contact website with b.tc4fun.ir, retaining email and explorer URL. Document the optional public metadata keys."
+      "destination_sha256": "1608a1480461c2ec7ac462c72692f9728f5a8aa20e5d5a6040ed8985d5351c1a",
+      "adaptation": "Align example brand and printable contact website with b.tc4fun.ir, retaining email and explorer URL. Document the optional public metadata keys. Document the serial_minsec \"short\" option."
     },
     {
       "source_path": "btc_envelope_maker/fonts/LICENSE",
