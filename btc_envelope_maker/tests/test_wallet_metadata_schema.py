@@ -46,7 +46,8 @@ class SQLiteMetadataSchema(unittest.TestCase):
     def test_fresh_table_has_nullable_text_contact_columns_with_null_defaults(self):
         btc_db.check(self.url)
         columns = self.columns()
-        self.assertEqual(tuple(columns), PUBLIC_COLUMNS + CONTACT_COLUMNS + OPTIONAL_PUBLIC_COLUMNS)
+        self.assertEqual(tuple(columns),
+                         PUBLIC_COLUMNS + CONTACT_COLUMNS + OPTIONAL_PUBLIC_COLUMNS + (btc_db.LINKS_COLUMN,))
         for name in CONTACT_COLUMNS:
             with self.subTest(column=name):
                 self.assertEqual(columns[name][2].upper(), "TEXT")
@@ -202,7 +203,8 @@ class SQLiteMetadataSchema(unittest.TestCase):
         self.assertEqual(tuple(self.columns()), PUBLIC_COLUMNS)
 
     def test_public_row_csv_import_and_list_never_expose_or_overwrite_private_metadata(self):
-        self.assertEqual(tuple(field.name for field in fields(btc_db.Row)), PUBLIC_COLUMNS + OPTIONAL_PUBLIC_COLUMNS)
+        self.assertEqual(tuple(field.name for field in fields(btc_db.Row)),
+                         PUBLIC_COLUMNS + OPTIONAL_PUBLIC_COLUMNS + (btc_db.LINKS_COLUMN,))
         with self.assertRaises(TypeError):
             btc_db.Row("fixture-1", "public-address-1", contact_type="email")
         btc_db.check(self.url)

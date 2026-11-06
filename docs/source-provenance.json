@@ -33,23 +33,23 @@
       "destination_path": "btc_envelope_maker/btc_db.py",
       "source_sha256": "d0bd597d80751d0dbb822f14ba81ef634724b769672830287a9a201d05549369",
       "source_git_blob": "74c81c01c77fcc717099ef6d9b6ce4f29c379bbd",
-      "destination_sha256": "aae78acc1688a7f54bb32f5aa9a4b497b96b190e77bfff890b98a4f9f56ad882",
-      "adaptation": "Add four optional public metadata columns (public_notes, site_key, site_url, image_url), an explicit migrate_public_columns()/migrate-public path, optional CSV columns and NULL-for-blank storage; private contact columns untouched."
+      "destination_sha256": "e3da487902f3286a3ac023de3e7406a52e44914e9994377f4bdaf9cd82c5c8ff",
+      "adaptation": "Add four optional public metadata columns (public_notes, site_key, site_url, image_url), an explicit migrate_public_columns()/migrate-public path, optional CSV columns and NULL-for-blank storage; private contact columns untouched. Add nullable public_links JSON-text column, migrate it with migrate-public, read it from CSV, and add an export subcommand writing public columns to CSV."
     },
     {
       "source_path": "btc_envelope_maker/btc_envelope_maker.py",
       "destination_path": "btc_envelope_maker/btc_envelope_maker.py",
       "source_sha256": "ba28920c681daf903730c294ac510dde5deb111c7262a8534fe6bfde46bbb37e",
       "source_git_blob": "8bdfb78ad4655c1f8bfcdf98e28510a9c3d6b863",
-      "destination_sha256": "819acd556ffd554311ff24ef3e90fccbcdcb20a108a969cf0e26842f7af8f98c",
-      "adaptation": "Change new-output brand and printable contact website defaults to b.tc4fun.ir; retain existing operator config and email. Add optional public metadata config keys with https/host validation and pass them to the database row. Add serial_minsec mode 'short': 5-char stem Y(1,base36)+M+D+H+X(1,base36) with a per-hour counter derived from existing batch_* folders (no DB); digits/compact modes retained. Require site_url's host to match site_key (the site's name) so the public pair is a key/value of name and address."
+      "destination_sha256": "e261ad008c1159088d0b8b98391a81318c182c7d136e2732bf8618bb0afad3f8",
+      "adaptation": "Change new-output brand and printable contact website defaults to b.tc4fun.ir; retain existing operator config and email. Add optional public metadata config keys with https/host validation and pass them to the database row. Add serial_minsec mode 'short': 5-char stem Y(1,base36)+M+D+H+X(1,base36) with a per-hour counter derived from existing batch_* folders (no DB); digits/compact modes retained. Require site_url's host to match site_key (the site's name) so the public pair is a key/value of name and address. Add optional public_links key/value map (instagram, telegram, ...) validated as https URLs and stored with each row."
     },
     {
       "source_path": "btc_envelope_maker/config.example.toml",
       "destination_path": "btc_envelope_maker/config.example.toml",
       "source_sha256": "dbdcafae7aebfc0c20e3b4a7cd2806d55467678ed025a5ac2915ca8feeca1eb8",
       "source_git_blob": "7a7c569bf6d646ec6e44e13ba6ec6d6a3bfce245",
-      "destination_sha256": "1608a1480461c2ec7ac462c72692f9728f5a8aa20e5d5a6040ed8985d5351c1a",
+      "destination_sha256": "e0d30888ecbeb64085235b31fea8f146c8059b3bd7e60d6c917348396841a87a",
       "adaptation": "Align example brand and printable contact website with b.tc4fun.ir, retaining email and explorer URL. Document the optional public metadata keys. Document the serial_minsec \"short\" option."
     },
     {
@@ -257,7 +257,7 @@
       "destination_path": "btc_envelope_maker/tests/test_wallet_metadata_schema.py",
       "source_sha256": "c309f0de9dfb4022f3c849f3a13531af0895454777f9ca6277db63e75b50363d",
       "source_git_blob": "113fc3f080c7ae063fc97bba49bf811b7329a0c5",
-      "destination_sha256": "3cc4442a0473796a86b83aabc17e44679e271602b24a867f2872f90822ead7fb",
+      "destination_sha256": "d70693c77de5447f98907e26bd52db0491a30550e5f2708223d1048620194151",
       "adaptation": "Extend the schema contract to the four optional public metadata columns and the extended Row field list; private contact assertions unchanged."
     }
   ]

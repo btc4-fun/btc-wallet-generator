@@ -39,6 +39,7 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
+import json
 import os
 import re
 import sqlite3
@@ -76,6 +77,10 @@ def _safe_errors(function):
 
 
 PUBLIC_COLUMNS = ("public_notes", "site_key", "site_url", "image_url")
+# A key/value list of public links (instagram, telegram, youtube, ...) stored as
+# JSON text in one nullable column. Kept out of PUBLIC_COLUMNS because it is
+# serialized, not a plain text value.
+LINKS_COLUMN = "public_links"
 
 
 def _public_value(value) -> str | None:
@@ -84,6 +89,40 @@ def _public_value(value) -> str | None:
         return None
     text = str(value).strip()
     return text or None
+
+
+def _links_value(value) -> str | None:
+    """Optional public links: a dict becomes compact JSON text; empty becomes NULL."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        try:
+            value = json.loads(text)
+        except ValueError:
+            raise DbError("public links must be a JSON object of key/value pairs") from None
+    if not isinstance(value, dict):
+        raise DbError("public links must be a JSON object of key/value pairs")
+    clean = {str(k).strip(): str(v).strip() for k, v in value.items()
+             if str(k).strip() and str(v).strip()}
+    if not clean:
+        return None
+    return json.dumps(clean, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def _links_text(value) -> str:
+    """Render stored links as `key=value;key=value` for CSV export."""
+    if not value:
+        return ""
+    try:
+        data = json.loads(value) if isinstance(value, str) else value
+    except ValueError:
+        return ""
+    if not isinstance(data, dict):
+        return ""
+    return ";".join(f"{k}={v}" for k, v in sorted(data.items()))
 
 
 @dataclass(frozen=True)
@@ -101,6 +140,7 @@ class Row:
     site_key: str | None = None
     site_url: str | None = None
     image_url: str | None = None
+    public_links: dict | str | None = None
 
 
 # --------------------------------------------------------------------------------------
@@ -195,7 +235,8 @@ def _ddl(kind: str, table: str) -> str:
             f"jalali_datetime TEXT, created_utc {ts}, contact_type TEXT DEFAULT NULL, "
             "contact_value TEXT DEFAULT NULL, notes TEXT DEFAULT NULL, "
             "public_notes TEXT DEFAULT NULL, site_key TEXT DEFAULT NULL, "
-            "site_url TEXT DEFAULT NULL, image_url TEXT DEFAULT NULL)")
+            "site_url TEXT DEFAULT NULL, image_url TEXT DEFAULT NULL, "
+            "public_links TEXT DEFAULT NULL)")
 
 
 @_safe_errors
@@ -311,14 +352,14 @@ def migrate_public_columns(url: str, table: str = DEFAULT_TABLE) -> None:
             columns = {row[1].lower(): row for row in cur.fetchall()}
             if not {"serial", "address", "jalali_datetime", "created_utc"}.issubset(columns):
                 raise DbError("existing table is missing public ledger columns; nothing was changed")
-            for name in PUBLIC_COLUMNS:
+            for name in PUBLIC_COLUMNS + (LINKS_COLUMN,):
                 if name in columns:
                     column = columns[name]
                     default = column[4]
                     if (column[2].strip().upper() != "TEXT" or column[3] or column[5]
                             or (default is not None and default.strip().upper() != "NULL")):
                         raise DbError("incompatible public metadata schema; nothing was changed")
-            for name in PUBLIC_COLUMNS:
+            for name in PUBLIC_COLUMNS + (LINKS_COLUMN,):
                 if name not in columns:
                     cur.execute(f'ALTER TABLE "{table}" ADD COLUMN {name} TEXT DEFAULT NULL')
         else:
@@ -341,13 +382,13 @@ def migrate_public_columns(url: str, table: str = DEFAULT_TABLE) -> None:
             columns = {row[0]: row for row in cur.fetchall()}
             if not {"serial", "address", "jalali_datetime", "created_utc"}.issubset(columns):
                 raise DbError("existing table is missing public ledger columns; nothing was changed")
-            for name in PUBLIC_COLUMNS:
+            for name in PUBLIC_COLUMNS + (LINKS_COLUMN,):
                 if name in columns:
                     _, is_text, not_null, default, identity, generated = columns[name]
                     if (not is_text or not_null or identity or generated
                             or default not in (None, "NULL::text")):
                         raise DbError("incompatible public metadata schema; nothing was changed")
-            for name in PUBLIC_COLUMNS:
+            for name in PUBLIC_COLUMNS + (LINKS_COLUMN,):
                 cur.execute(f"ALTER TABLE ONLY {qualified} ADD COLUMN IF NOT EXISTS {name} TEXT DEFAULT NULL")
         conn.commit()
     except DbError:
@@ -407,13 +448,15 @@ def save_rows(url: str, table: str, rows: list[Row], *, skip_existing: bool = Fa
     # existing pre-migration table stays usable for plain ledger inserts
     # (save_rows never migrates). Empty values become NULL.
     with_public = any(_public_value(getattr(row, name, None)) is not None for row in rows for name in PUBLIC_COLUMNS)
+    with_links = any(_links_value(getattr(row, LINKS_COLUMN, None)) is not None for row in rows)
     kind, target = parse_url(url)
     conn = _connect(kind, target)
     ph = "?" if kind == "sqlite" else "%s"
-    if with_public:
+    if with_public or with_links:
+        extra = PUBLIC_COLUMNS + ((LINKS_COLUMN,) if with_links else ())
         ins = (f"INSERT INTO {table} (serial, address, jalali_datetime, created_utc, "
-               f"{', '.join(PUBLIC_COLUMNS)}) "
-               f"VALUES ({', '.join([ph] * (4 + len(PUBLIC_COLUMNS)))})")
+               f"{', '.join(extra)}) "
+               f"VALUES ({', '.join([ph] * (4 + len(extra)))})")
     else:
         ins = f"INSERT INTO {table} (serial, address, jalali_datetime, created_utc) VALUES ({ph}, {ph}, {ph}, {ph})"
     inserted = skipped = 0
@@ -422,8 +465,10 @@ def save_rows(url: str, table: str, rows: list[Row], *, skip_existing: bool = Fa
         cur.execute(_ddl(kind, table))
         for r in rows:
             vals = (r.serial, r.address, r.jalali_datetime or None, _created_value(kind, r.created_utc))
-            if with_public:
+            if with_public or with_links:
                 vals += tuple(_public_value(getattr(r, name, None)) for name in PUBLIC_COLUMNS)
+            if with_links:
+                vals += (_links_value(getattr(r, LINKS_COLUMN, None)),)
             if not skip_existing:
                 cur.execute(ins, vals)
                 inserted += 1
@@ -465,6 +510,47 @@ def list_rows(url: str, table: str = DEFAULT_TABLE, limit: int = 20) -> list[tup
         conn.close()
 
 
+EXPORT_COLUMNS = ("serial", "address", "jalali_datetime", "created_utc",
+                  "site_key", "site_url", "image_url", "public_notes", LINKS_COLUMN)
+
+
+@_safe_errors
+def export_rows(url: str, table: str = DEFAULT_TABLE, out: Path | str = "wallets.csv",
+                limit: int | None = None) -> int:
+    """Write the public columns to a CSV file; returns the number of rows written.
+
+    Only the public ledger columns and the optional PUBLIC metadata are selected.
+    The private contact_type/contact_value/notes columns are never read or
+    exported. public_links is flattened to `key=value;key=value` so the file
+    stays a plain CSV. The file is written with a UTF-8 BOM so spreadsheet
+    programs open Persian text correctly.
+    """
+    check_table(table)
+    kind, target = parse_url(url)
+    conn = _connect(kind, target)
+    try:
+        cur = conn.cursor()
+        sql = (f"SELECT {', '.join(EXPORT_COLUMNS)} FROM {table} "
+               f"ORDER BY created_utc DESC, serial")
+        if limit is not None:
+            sql += f" LIMIT {int(limit)}"
+        cur.execute(sql)
+        rows = cur.fetchall()
+    except Exception:
+        raise DbError("database export failed; details withheld") from None
+    finally:
+        conn.close()
+    path = Path(out)
+    with open(path, "w", newline="", encoding="utf-8-sig") as f:
+        w = csv.writer(f)
+        w.writerow(EXPORT_COLUMNS)
+        for row in rows:
+            values = list(row)
+            values[-1] = _links_text(values[-1])
+            w.writerow(["" if v is None else v for v in values])
+    return len(rows)
+
+
 @_safe_errors
 def read_ledger(path: Path) -> list[Row]:
     if not Path(path).exists():
@@ -482,7 +568,8 @@ def read_ledger(path: Path) -> list[Row]:
                             _public_value(d.get("public_notes")),
                             _public_value(d.get("site_key")),
                             _public_value(d.get("site_url")),
-                            _public_value(d.get("image_url"))))
+                            _public_value(d.get("image_url")),
+                            _links_value(d.get("public_links"))))
     if not rows:
         raise DbError("ledger contains no rows")
     return rows
@@ -507,12 +594,16 @@ def main(argv: list[str] | None = None) -> int:
     for name, helptext in (("import", "load a ledger.csv into the database (safe to repeat)"),
                            ("list", "show the newest public records"),
                            ("migrate-contact", "administrator only: add private metadata columns to an existing table"),
-                           ("migrate-public", "add the four optional public metadata columns to an existing table")):
+                           ("migrate-public", "add the optional public metadata columns to an existing table"),
+                           ("export", "write the public columns (incl. site and links) to a CSV file")):
         p = sub.add_parser(name, help=helptext)
         if name == "import":
             p.add_argument("ledger", help="path to ledger.csv")
         elif name == "list":
             p.add_argument("--limit", type=int, default=20)
+        elif name == "export":
+            p.add_argument("--out", default="wallets.csv", help="CSV file to write (default wallets.csv)")
+            p.add_argument("--limit", type=int, default=None)
         p.add_argument("--db", help=f"connection string (or set {ENV_VAR})")
         p.add_argument("--table", default=DEFAULT_TABLE)
     a = ap.parse_args(argv)
@@ -529,6 +620,9 @@ def main(argv: list[str] | None = None) -> int:
         elif a.cmd == "migrate-public":
             migrate_public_columns(url, a.table)
             print("public metadata schema ready (no values read or written)")
+        elif a.cmd == "export":
+            count = export_rows(url, a.table, a.out, a.limit)
+            print(f"{count} rows exported  ->  {a.out}  ({describe(url)})")
         else:
             for r in list_rows(url, a.table, a.limit):
                 print("  ".join("" if v is None else str(v) for v in r))

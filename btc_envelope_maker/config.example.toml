@@ -44,3 +44,10 @@ site_url = ""       # https only, up to 512 chars, host must be in the allowlist
 image_url = ""      # https only, up to 512 chars, host must be in the allowlist
 # Extra hosts allowed for site_url/image_url (comma separated, https only).
 public_url_hosts = ""
+
+# Optional PUBLIC links: a key/value list shown on the customer page and in the app.
+# Keys are short labels (a-z 0-9 . _ -, up to 32 chars); values must be https URLs.
+# Leave the table empty to store NULL. Never put private contact details here.
+[public_links]
+# instagram = "https://example.com/instagram"
+# telegram  = "https://example.com/telegram"

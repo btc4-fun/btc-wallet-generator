@@ -64,7 +64,8 @@ class MigrationTests(unittest.TestCase):
         btc_db.migrate_public_columns(self.url)
         after_first = self.columns()
         self.assertEqual(after_first,
-                         ["serial", "address", "jalali_datetime", "created_utc", *OPTIONAL])
+                         ["serial", "address", "jalali_datetime", "created_utc", *OPTIONAL,
+                          btc_db.LINKS_COLUMN])
         # Private columns are not created by this migration.
         self.assertFalse(set(PRIVATE) & set(after_first))
         btc_db.migrate_public_columns(self.url)              # idempotent no-op

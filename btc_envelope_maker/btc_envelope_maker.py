@@ -113,7 +113,49 @@ DEFAULTS = {
     "site_url": "",
     "image_url": "",
     "public_url_hosts": "",
+    "public_links": {},
 }
+
+# Public links: a key/value list the owner fills in (instagram, telegram, ...).
+# Keys are short lowercase labels; values are absolute https URLs.
+LINK_KEY_RE = re.compile(r"[a-z0-9][a-z0-9._-]{0,31}")
+MAX_PUBLIC_LINKS = 20
+
+
+def normalize_public_links(value) -> dict:
+    """Validate the optional public links map; raise SystemExit on bad input.
+
+    Keys become lowercase labels (a-z 0-9 . _ -, 1-32 chars). Values must be
+    absolute https URLs without control/format characters. An empty map is
+    valid and means "no links".
+    """
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise SystemExit("config: 'public_links' must be a table of key = \"https://...\" pairs.")
+    if len(value) > MAX_PUBLIC_LINKS:
+        raise SystemExit(f"config: 'public_links' may hold at most {MAX_PUBLIC_LINKS} entries.")
+    clean: dict[str, str] = {}
+    for raw_key, raw_value in value.items():
+        key = str(raw_key).strip().lower()
+        if LINK_KEY_RE.fullmatch(key) is None:
+            raise SystemExit("config: 'public_links' keys must be 1-32 characters: a-z 0-9 . _ -")
+        if not isinstance(raw_value, str):
+            raise SystemExit(f"config: 'public_links.{key}' must be a string URL.")
+        url = raw_value.strip()
+        if not url:
+            continue
+        if len(url) > 512 or _UNSAFE_TEXT.search(url) or any(c.isspace() for c in url):
+            raise SystemExit(f"config: 'public_links.{key}' must be a clean https URL (max 512 chars).")
+        try:
+            parts = urlparse(url)
+            _ = parts.port
+        except ValueError:
+            raise SystemExit(f"config: 'public_links.{key}' is not a valid URL.") from None
+        if parts.scheme != "https" or not parts.hostname or parts.username or parts.password:
+            raise SystemExit(f"config: 'public_links.{key}' must be an absolute https URL.")
+        clean[key] = url
+    return clean
 
 # Hosts allowed for the optional public site_url / image_url values.
 PUBLIC_URL_HOSTS = frozenset({"btc4.fun", "btc.saeb.id.ir", "b.tc4fun.ir"})
@@ -217,6 +259,7 @@ def load_config(path: Path) -> dict:
              + ", ".join(sorted(hosts)))
     need(bool(cfg["site_key"]) == bool(cfg["site_url"]),
          "'site_key' and 'site_url' must be set together or both left empty.")
+    cfg["public_links"] = normalize_public_links(cfg.get("public_links"))
     # site_key is the site's NAME and site_url its ADDRESS: the address must
     # belong to the named site, so a mismatched pair is a config error.
     if cfg["site_key"]:
@@ -979,7 +1022,8 @@ def main() -> None:
             # contact columns); blank values are stored as NULL by btc_db.
             rows = [btc_db.Row(r.serial, r.address, human, created,
                                cfg["public_notes"] or None, cfg["site_key"] or None,
-                               cfg["site_url"] or None, cfg["image_url"] or None) for r in wallets]
+                               cfg["site_url"] or None, cfg["image_url"] or None,
+                               cfg["public_links"] or None) for r in wallets]
             n_ins, _ = btc_db.save_rows(db_url, db_table, rows)
             db_msg = f"Database: {n_ins} wallet(s) saved to table '{db_table}' ({btc_db.describe(db_url)})"
         except btc_db.DbError as e:
