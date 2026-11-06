@@ -118,43 +118,110 @@ DEFAULTS = {
 
 # Public links: a key/value list the owner fills in (instagram, telegram, ...).
 # Keys are short lowercase labels; values are absolute https URLs.
+# A label is either an ASCII slug or any short human text (Persian included);
+# control/format/bidi characters are rejected by _UNSAFE_TEXT, not by the label rule.
 LINK_KEY_RE = re.compile(r"[a-z0-9][a-z0-9._-]{0,31}")
+MAX_LABEL_CHARS = 32
 MAX_PUBLIC_LINKS = 20
+# Links may be plain https addresses or mailto:/tel: contact routes, never anything else.
+LINK_SCHEMES = ("https", "mailto", "tel")
+
+
+def _link_label(raw_key) -> str:
+    """A label is an ASCII slug (lowercased) or short human text kept as written."""
+    label = str(raw_key).strip()
+    if not label:
+        raise SystemExit("config: 'public_links' labels must not be empty.")
+    if _UNSAFE_TEXT.search(label):
+        raise SystemExit("config: 'public_links' labels must not contain control or bidi characters.")
+    # A slug is case-insensitive, so it is normalized; human text keeps its case.
+    if LINK_KEY_RE.fullmatch(label.lower()):
+        return label.lower()
+    if len(label) > MAX_LABEL_CHARS:
+        raise SystemExit(f"config: 'public_links' labels are at most {MAX_LABEL_CHARS} characters.")
+    return label
+
+
+def _link_value(label: str, raw_value) -> str | None:
+    """Accept a bare contact value (email/phone) or an https/mailto:/tel: route.
+
+    A value WITHOUT a scheme is a contact detail the owner wrote plainly:
+    `you@example.com` becomes `mailto:you@example.com` and a phone number
+    becomes `tel:` with any spaces/dashes removed. Every other scheme
+    (http, javascript, data, ...) is rejected.
+    """
+    if not isinstance(raw_value, str):
+        raise SystemExit(f"config: 'public_links.{label}' must be a string.")
+    value = raw_value.strip()
+    if not value:
+        return None
+    if len(value) > 512 or _UNSAFE_TEXT.search(value):
+        raise SystemExit(f"config: 'public_links.{label}' must be clean text (max 512 chars).")
+    if any(c.isspace() for c in value) and "@" not in value and not re.fullmatch(r"[+0-9 ().-]+", value):
+        raise SystemExit(f"config: 'public_links.{label}' must not contain spaces.")
+    parts = urlparse(value)
+    scheme = parts.scheme.lower()
+    if scheme in ("mailto", "tel"):
+        target = value.split(":", 1)[1].strip()
+        if not target:
+            raise SystemExit(f"config: 'public_links.{label}' has an empty {scheme} target.")
+        if scheme == "tel":
+            if not re.fullmatch(r"[+0-9][0-9 ().-]*", target):
+                raise SystemExit(f"config: 'public_links.{label}' is not a usable phone number.")
+            digits = re.sub(r"[ ().-]", "", target)
+            if len(digits) < 5:
+                raise SystemExit(f"config: 'public_links.{label}' is not a usable phone number.")
+            return "tel:" + digits
+        if "@" not in target or "/" in target or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", target):
+            raise SystemExit(f"config: 'public_links.{label}' is not a usable email address.")
+        return "mailto:" + target
+    # A bare value has no scheme (or a scheme that is not a real one, like a
+    # phone's `+`); a real host never contains '@' or a space.
+    if "@" in value and "/" not in value:
+        return "mailto:" + value
+    if re.fullmatch(r"[+0-9][0-9 ().-]*", value):
+        digits = re.sub(r"[ ().-]", "", value)
+        if len(digits) < 5:
+            raise SystemExit(f"config: 'public_links.{label}' is not a usable phone number.")
+        return "tel:" + digits
+    if scheme != "https":
+        raise SystemExit(f"config: 'public_links.{label}' must be an https URL, a mailto:/tel: route, "
+                         f"an email address or a phone number.")
+    # A public link is any absolute https URL the seller chooses (their own
+    # Instagram, Telegram, ...), so only the shape is checked: a host, no
+    # userinfo and no port. A host with an underscore (a t.me alias) is fine.
+    if not parts.netloc or parts.username or parts.password:
+        raise SystemExit(f"config: 'public_links.{label}' must be an absolute https URL.")
+    try:
+        if parts.port is not None:
+            raise SystemExit(f"config: 'public_links.{label}' must not have a port.")
+    except ValueError:
+        raise SystemExit(f"config: 'public_links.{label}' is not a valid URL.") from None
+    return value
 
 
 def normalize_public_links(value) -> dict:
     """Validate the optional public links map; raise SystemExit on bad input.
 
-    Keys become lowercase labels (a-z 0-9 . _ -, 1-32 chars). Values must be
-    absolute https URLs without control/format characters. An empty map is
-    valid and means "no links".
+    A label is an ASCII slug (a-z 0-9 . _ -, 1-32 chars, lowercased) or short
+    human text such as a Persian name, kept exactly as written. A value is an
+    absolute https URL or a mailto:/tel: contact route, without control or bidi
+    characters. An empty map is valid and means "no links".
     """
     if value is None:
         return {}
     if not isinstance(value, dict):
-        raise SystemExit("config: 'public_links' must be a table of key = \"https://...\" pairs.")
+        raise SystemExit("config: 'public_links' must be a table of label = \"value\" pairs.")
     if len(value) > MAX_PUBLIC_LINKS:
         raise SystemExit(f"config: 'public_links' may hold at most {MAX_PUBLIC_LINKS} entries.")
     clean: dict[str, str] = {}
     for raw_key, raw_value in value.items():
-        key = str(raw_key).strip().lower()
-        if LINK_KEY_RE.fullmatch(key) is None:
-            raise SystemExit("config: 'public_links' keys must be 1-32 characters: a-z 0-9 . _ -")
-        if not isinstance(raw_value, str):
-            raise SystemExit(f"config: 'public_links.{key}' must be a string URL.")
-        url = raw_value.strip()
-        if not url:
-            continue
-        if len(url) > 512 or _UNSAFE_TEXT.search(url) or any(c.isspace() for c in url):
-            raise SystemExit(f"config: 'public_links.{key}' must be a clean https URL (max 512 chars).")
-        try:
-            parts = urlparse(url)
-            _ = parts.port
-        except ValueError:
-            raise SystemExit(f"config: 'public_links.{key}' is not a valid URL.") from None
-        if parts.scheme != "https" or not parts.hostname or parts.username or parts.password:
-            raise SystemExit(f"config: 'public_links.{key}' must be an absolute https URL.")
-        clean[key] = url
+        label = _link_label(raw_key)
+        if label in clean:
+            raise SystemExit(f"config: 'public_links' has a duplicate label: {label}")
+        accepted = _link_value(label, raw_value)
+        if accepted is not None:
+            clean[label] = accepted
     return clean
 
 # Hosts allowed for the optional public site_url / image_url values.

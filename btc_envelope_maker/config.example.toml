@@ -45,9 +45,14 @@ image_url = ""      # https only, up to 512 chars, host must be in the allowlist
 # Extra hosts allowed for site_url/image_url (comma separated, https only).
 public_url_hosts = ""
 
-# Optional PUBLIC links: a key/value list shown on the customer page and in the app.
-# Keys are short labels (a-z 0-9 . _ -, up to 32 chars); values must be https URLs.
+# Optional PUBLIC links: a label/value list shown on the customer page and in the app.
+# A label is an ASCII slug (a-z 0-9 . _ -, up to 32 chars) or short human text
+# such as a Persian name; quote a label that is not plain ASCII.
+# A value is an https URL on an allowlisted host, or a mailto:/tel: contact route.
 # Leave the table empty to store NULL. Never put private contact details here.
 [public_links]
 # instagram = "https://example.com/instagram"
 # telegram  = "https://example.com/telegram"
+# "اینستاگرام" = "https://instagram.com/example"
+# "ایمیل" = "mailto:you@example.com"
+# "تلفن" = "tel:+989120000000"

@@ -47,7 +47,7 @@ import sys
 from dataclasses import dataclass
 from functools import wraps
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import quote, unquote, urlsplit
 
 DEFAULT_TABLE = "wallets"
 ENV_VAR = "BTC_DB_URL"
@@ -113,7 +113,11 @@ def _links_value(value) -> str | None:
 
 
 def _links_text(value) -> str:
-    """Render stored links as `key=value;key=value` for CSV export."""
+    """Render stored links as `key=value;key=value` for CSV export.
+
+    A value that itself contains `;` or `=` is percent-escaped so the flat
+    key=value form stays unambiguous when it is read back.
+    """
     if not value:
         return ""
     try:
@@ -122,7 +126,32 @@ def _links_text(value) -> str:
         return ""
     if not isinstance(data, dict):
         return ""
-    return ";".join(f"{k}={v}" for k, v in sorted(data.items()))
+    return ";".join(f"{k}={quote(str(v), safe='')}" for k, v in sorted(data.items()))
+
+
+def _links_from_text(text: str | None) -> dict[str, str]:
+    """Parse the flat `key=value;key=value` CSV form back into a dict."""
+    if not text:
+        return {}
+    links: dict[str, str] = {}
+    for part in str(text).split(";"):
+        part = part.strip()
+        if not part:
+            continue
+        key, sep, value = part.partition("=")
+        key, value = key.strip(), value.strip()
+        if not sep or not key or not value:
+            continue
+        links[key] = unquote(value)
+    return links
+
+
+def _links_cell(text: str | None):
+    """CSV cell -> links value. Accepts JSON or the flat export form."""
+    body = str(text or "").strip()
+    if not body:
+        return None
+    return _links_from_text(body) if not body.startswith("{") else body
 
 
 @dataclass(frozen=True)
@@ -569,7 +598,7 @@ def read_ledger(path: Path) -> list[Row]:
                             _public_value(d.get("site_key")),
                             _public_value(d.get("site_url")),
                             _public_value(d.get("image_url")),
-                            _links_value(d.get("public_links"))))
+                            _links_value(_links_cell(d.get("public_links")))))
     if not rows:
         raise DbError("ledger contains no rows")
     return rows

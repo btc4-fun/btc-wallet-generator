@@ -17,7 +17,7 @@
       "destination_path": "btc_envelope_maker/README.md",
       "source_sha256": "64a3124ec4ac0de0352b1e3c17c74b99cd9349adaae8a469ccd9598b5273ce01",
       "source_git_blob": "16b72f1d6d22349da2d7f31c68447c0cc655c4dc",
-      "destination_sha256": "b1c0007c4420340bcb39f2d651994ef618623e133ed84cf7f49752931242849b",
+      "destination_sha256": "92cf703e0314b0351665d263987b54a49c6d308c3f3e7a85b1a4e06f7cd6ea4a",
       "adaptation": "Document new-output domain and printable contact default b.tc4fun.ir; preserve existing configurations and original source provenance. Document the serial_minsec \"short\" mode (5-char stem, 36 runs/hour, legacy 9-char still accepted). Document the optional public metadata keys (public_notes, site_key, site_url, image_url, public_url_hosts) and their limits."
     },
     {
@@ -33,7 +33,7 @@
       "destination_path": "btc_envelope_maker/btc_db.py",
       "source_sha256": "d0bd597d80751d0dbb822f14ba81ef634724b769672830287a9a201d05549369",
       "source_git_blob": "74c81c01c77fcc717099ef6d9b6ce4f29c379bbd",
-      "destination_sha256": "e3da487902f3286a3ac023de3e7406a52e44914e9994377f4bdaf9cd82c5c8ff",
+      "destination_sha256": "9e7af530b914100d23b1e8897a0f2c2448c8d6070f51cd4023d29ac271c28c4b",
       "adaptation": "Add four optional public metadata columns (public_notes, site_key, site_url, image_url), an explicit migrate_public_columns()/migrate-public path, optional CSV columns and NULL-for-blank storage; private contact columns untouched. Add nullable public_links JSON-text column, migrate it with migrate-public, read it from CSV, and add an export subcommand writing public columns to CSV."
     },
     {
@@ -41,7 +41,7 @@
       "destination_path": "btc_envelope_maker/btc_envelope_maker.py",
       "source_sha256": "ba28920c681daf903730c294ac510dde5deb111c7262a8534fe6bfde46bbb37e",
       "source_git_blob": "8bdfb78ad4655c1f8bfcdf98e28510a9c3d6b863",
-      "destination_sha256": "e261ad008c1159088d0b8b98391a81318c182c7d136e2732bf8618bb0afad3f8",
+      "destination_sha256": "318705d16cd871316625b29b23837cdf2677c3a4ba55841dc46703973c697105",
       "adaptation": "Change new-output brand and printable contact website defaults to b.tc4fun.ir; retain existing operator config and email. Add optional public metadata config keys with https/host validation and pass them to the database row. Add serial_minsec mode 'short': 5-char stem Y(1,base36)+M+D+H+X(1,base36) with a per-hour counter derived from existing batch_* folders (no DB); digits/compact modes retained. Require site_url's host to match site_key (the site's name) so the public pair is a key/value of name and address. Add optional public_links key/value map (instagram, telegram, ...) validated as https URLs and stored with each row."
     },
     {
@@ -49,7 +49,7 @@
       "destination_path": "btc_envelope_maker/config.example.toml",
       "source_sha256": "dbdcafae7aebfc0c20e3b4a7cd2806d55467678ed025a5ac2915ca8feeca1eb8",
       "source_git_blob": "7a7c569bf6d646ec6e44e13ba6ec6d6a3bfce245",
-      "destination_sha256": "e0d30888ecbeb64085235b31fea8f146c8059b3bd7e60d6c917348396841a87a",
+      "destination_sha256": "deb40137861b242dc6c4f827c7d5018c4ff1a22419a8e7e2c403d2ca21f0f94a",
       "adaptation": "Align example brand and printable contact website with b.tc4fun.ir, retaining email and explorer URL. Document the optional public metadata keys. Document the serial_minsec \"short\" option."
     },
     {

@@ -44,15 +44,57 @@ class PublicLinksUnit(unittest.TestCase):
         self.assertEqual(generator.normalize_public_links({}), {})
         self.assertEqual(generator.normalize_public_links(None), {})
 
-    def test_keys_are_lowercased_and_trimmed(self):
+    def test_slug_labels_are_lowercased_and_trimmed(self):
         self.assertEqual(generator.normalize_public_links({" Instagram ": "https://instagram.com/x"}),
                          {"instagram": "https://instagram.com/x"})
 
-    def test_bad_keys_are_rejected(self):
-        for key in ("bad key", "k" * 33, "", "  ", "a/b", "کلید"):
+    def test_human_labels_are_kept_as_written(self):
+        # The owner writes contact labels in Persian; they are shown verbatim.
+        for label in ("اینستاگرام", "تلگرام", "ایمیل", "سایت", "Instagram Profile"):
+            with self.subTest(label=label):
+                self.assertEqual(
+                    generator.normalize_public_links({label: "https://instagram.com/x"}),
+                    {label: "https://instagram.com/x"})
+
+    def test_bad_labels_are_rejected(self):
+        for key in ("k" * 33, "", "  ", "بد\u202eسط", "a\u0000b"):
             with self.subTest(key=key):
                 with self.assertRaises(SystemExit):
                     generator.normalize_public_links({key: "https://instagram.com/x"})
+
+    def test_mailto_and_tel_contact_routes_are_accepted(self):
+        routes = {"ایمیل": "mailto:09113458375@btc4.fun", "تلفن": "tel:+989113458375"}
+        self.assertEqual(generator.normalize_public_links(routes), routes)
+
+    def test_bare_email_and_phone_become_contact_routes(self):
+        # A seller writes contact details as plain text; they must work as-is.
+        got = generator.normalize_public_links({"ایمیل": "09113458375@btc.fun",
+                                                "موبایل": "0911 345 8375",
+                                                "تلفن": "+98 (911) 345-8375"})
+        self.assertEqual(got, {"ایمیل": "mailto:09113458375@btc.fun",
+                               "موبایل": "tel:09113458375",
+                               "تلفن": "tel:+989113458375"})
+
+    def test_any_https_host_is_allowed_for_a_link(self):
+        # A seller's own profiles live on other hosts; only the shape is checked.
+        links = {"instagram": "https://instagram.com/b.tc4fun.ir",
+                 "telegram": "https://b_tc4fun_ir.t.me",
+                 "youtube": "https://youtube.com/@btc4fun"}
+        self.assertEqual(generator.normalize_public_links(links), links)
+
+    def test_unsafe_link_schemes_and_shapes_are_still_rejected(self):
+        for value in ("http://instagram.com/x", "javascript:alert(1)", "data:text/html,x",
+                      "https://user:pw@instagram.com/x", "https://instagram.com:8443/x",
+                      "https://instagram.com/a b", "tel:12", "mailto:not-an-email"):
+            with self.subTest(value=value):
+                with self.assertRaises(SystemExit):
+                    generator.normalize_public_links({"x": value})
+
+    def test_mailto_still_requires_a_clean_target(self):
+        for value in ("mailto:", "mailto: ", "mailto:a b@x.ir", "mailto:a\u202eb@x.ir"):
+            with self.subTest(value=ascii(value)):
+                with self.assertRaises(SystemExit):
+                    generator.normalize_public_links({"ایمیل": value})
 
     def test_values_must_be_https_urls(self):
         for value in ("http://instagram.com/x", "javascript:alert(1)", "instagram.com/x",
@@ -179,8 +221,16 @@ class PublicLinksDatabase(unittest.TestCase):
         self.assertEqual(btc_db.export_rows(self.url, "wallets", out), 1)
         text = out.read_text(encoding="utf-8-sig")
         self.assertIn("public_links", text.splitlines()[0])
-        self.assertIn("instagram=https://instagram.com/btc4fun", text)
-        self.assertIn("telegram=https://t.me/btc4fun", text)
+        # Values are percent-escaped so `;` and `=` inside them cannot break the flat form.
+        self.assertIn("instagram=https%3A%2F%2Finstagram.com%2Fbtc4fun", text)
+        self.assertIn("telegram=https%3A%2F%2Ft.me%2Fbtc4fun", text)
+
+    def test_csv_links_round_trip_through_the_flat_form(self):
+        # A mailto value contains both `@` and `=`-free separators; the round trip must keep it exact.
+        links = {"ایمیل": "mailto:09113458375@btc4.fun", "سایت": "https://btc.saeb.id.ir"}
+        flat = btc_db._links_text(json.dumps(links, ensure_ascii=False))
+        self.assertNotIn(" ", flat)
+        self.assertEqual(btc_db._links_from_text(flat), links)
 
 
 if __name__ == "__main__":
