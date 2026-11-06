@@ -217,6 +217,13 @@ def load_config(path: Path) -> dict:
              + ", ".join(sorted(hosts)))
     need(bool(cfg["site_key"]) == bool(cfg["site_url"]),
          "'site_key' and 'site_url' must be set together or both left empty.")
+    # site_key is the site's NAME and site_url its ADDRESS: the address must
+    # belong to the named site, so a mismatched pair is a config error.
+    if cfg["site_key"]:
+        host = urlparse(cfg["site_url"]).hostname or ""
+        key = cfg["site_key"].lower()
+        need(host == key or host.startswith(key + "."),
+             "'site_url' host must match 'site_key' (the site's name).")
 
     cfg["_logo"] = None
     if cfg.get("logo"):

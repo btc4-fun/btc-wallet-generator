@@ -41,8 +41,8 @@
       "destination_path": "btc_envelope_maker/btc_envelope_maker.py",
       "source_sha256": "ba28920c681daf903730c294ac510dde5deb111c7262a8534fe6bfde46bbb37e",
       "source_git_blob": "8bdfb78ad4655c1f8bfcdf98e28510a9c3d6b863",
-      "destination_sha256": "a7de1c5d2a509c59d91fa958d5408aad2e48efb9458768929119629c770626b0",
-      "adaptation": "Change new-output brand and printable contact website defaults to b.tc4fun.ir; retain existing operator config and email. Add optional public metadata config keys with https/host validation and pass them to the database row. Add serial_minsec mode 'short': 5-char stem Y(1,base36)+M+D+H+X(1,base36) with a per-hour counter derived from existing batch_* folders (no DB); digits/compact modes retained."
+      "destination_sha256": "819acd556ffd554311ff24ef3e90fccbcdcb20a108a969cf0e26842f7af8f98c",
+      "adaptation": "Change new-output brand and printable contact website defaults to b.tc4fun.ir; retain existing operator config and email. Add optional public metadata config keys with https/host validation and pass them to the database row. Add serial_minsec mode 'short': 5-char stem Y(1,base36)+M+D+H+X(1,base36) with a per-hour counter derived from existing batch_* folders (no DB); digits/compact modes retained. Require site_url's host to match site_key (the site's name) so the public pair is a key/value of name and address."
     },
     {
       "source_path": "btc_envelope_maker/config.example.toml",

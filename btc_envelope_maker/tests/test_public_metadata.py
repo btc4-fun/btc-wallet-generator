@@ -218,6 +218,22 @@ class ConfigValidationTests(unittest.TestCase):
             public_url_hosts="shop.example.invalid"))
         self.assertEqual(cfg["site_url"], "https://shop.example.invalid/")
 
+    def test_site_url_must_match_its_key(self):
+        # site_key is the site's name and site_url its address: the address must
+        # belong to the named site, so a mismatched pair is a config error.
+        self.assert_rejected(site_key="btc4.fun", site_url="https://b.tc4fun.ir/")
+        self.assert_rejected(site_key="shop", site_url="https://btc4.fun/")
+        cfg = generator.load_config(self.config(
+            site_key="b.tc4fun.ir", site_url="https://b.tc4fun.ir/path"))
+        self.assertEqual(cfg["site_key"], "b.tc4fun.ir")
+        self.assertEqual(cfg["site_url"], "https://b.tc4fun.ir/path")
+
+    def test_site_key_may_be_a_short_name_for_its_host(self):
+        # A short label is allowed as long as the address host starts with it.
+        cfg = generator.load_config(self.config(
+            site_key="btc4", site_url="https://btc4.fun/"))
+        self.assertEqual(cfg["site_key"], "btc4")
+
     def test_shipped_example_config_keeps_public_metadata_empty(self):
         # The example is committed and public: it must never carry a real
         # note, site or image, and it must still load without errors.
