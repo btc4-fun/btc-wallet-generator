@@ -73,15 +73,16 @@ TEST_MNEMONIC_24 = " ".join(["abandon"] * 23 + ["art"])    # public 24-word test
 GRAY = HexColor("#666666")
 LIGHT = HexColor("#bbbbbb")
 CUT = HexColor("#a8a8a8")
+FOLD = HexColor("#5a5a5a")
 RED = HexColor("#b00020")
 BLACK = HexColor("#111111")
 
 SHEETS = {"A3": (297, 420), "A4": (210, 297), "A5": (148, 210), "A6": (105, 148), "LETTER": (215.9, 279.4)}
 
 DEFAULTS = {
-    "brand_name": "btc4.fun",
+    "brand_name": "b.tc4fun.ir",
     "tagline": "",
-    "contact": "btc4.fun   |   09113458375@btc4.fun",
+    "contact": "b.tc4fun.ir   |   09113458375@b.tc4fun.ir",
     "logo": "",
     "accent_color": "#1f3a5f",
     "serial_prefix": "",
@@ -301,7 +302,8 @@ def load_config(path: Path) -> dict:
             sys.exit("config: " + msg)
 
     need(cfg["words"] in (12, 24), "'words' must be 12 or 24.")
-    need(cfg["layout"] in ("pairs", "separate"), "'layout' must be \"pairs\" or \"separate\".")
+    need(cfg["layout"] in ("pairs", "separate", "regency", "regency_card"),
+         "'layout' must be \"pairs\", \"separate\", \"regency\" or \"regency_card\".")
     need(cfg["pair_direction"] in ("auto", "side", "stack"), "'pair_direction' must be auto, side or stack.")
     need(cfg["serial_minsec"] in ("digits", "compact", "short"),
          "'serial_minsec' must be \"digits\", \"compact\" or \"short\".")
@@ -601,6 +603,13 @@ class Plan:
         return 100.0 * n_cards * self.cw * self.ch / (self.page_w * self.page_h)
 
     def describe(self, cfg: dict) -> str:
+        if self.direction == "regency":
+            return ("A4 portrait, Regency Method 3: four envelopes per group\n"
+                    "  each envelope: one A4 leaf, inside + back duplex; one public account leaf per group")
+        if self.direction == "regency_card":
+            return ("A4 portrait, card-sized Regency Method 3: four envelopes per group\n"
+                    "  two 171.2 x 148 mm leaves per A4, inside + back duplex; sealed packet 85.6 x 54 mm\n"
+                    "  one public account leaf per group")
         orient = "landscape" if self.landscape else "portrait"
         if self.direction == "single":
             how = "separate sheets: public cards on one, private cards on the other (same positions)"
@@ -614,6 +623,12 @@ class Plan:
 
 
 def make_plan(cfg: dict) -> Plan:
+    if cfg["layout"] == "regency":
+        # Four wallets per production group, each on its own full A4 leaf.
+        return Plan(210, 297, 1, 4, "regency", 210, 297, 0, 0, 0, False)
+    if cfg["layout"] == "regency_card":
+        # Four wallets per group, two card-sized leaves per A4.
+        return Plan(210, 297, 1, 4, "regency_card", 210, 297, 0, 0, 0, False)
     sw, sh = sheet_dims(cfg["sheet_size"])
     M, g = float(cfg["sheet_margin_mm"]), float(cfg["card_gap_mm"])
     cw, ch = float(cfg["card_width_mm"]), float(cfg["card_height_mm"])
@@ -742,6 +757,41 @@ def draw_qr(c, data: str, x: float, y: float, size: float) -> None:
     d = Drawing(size, size, transform=[size / (x1 - x0), 0, 0, size / (y1 - y0), 0, 0])
     d.add(w)
     renderPDF.draw(d, c, x, y)
+
+
+def draw_bitcoin_mark(c, x: float, y: float, size: float, color=RED) -> None:
+    """A small Bitcoin glyph: a ringed coin with a B and its two ticks.
+
+    Drawn as a filled path (not thin strokes) so the counters stay open and the
+    mark reads cleanly at 6 mm on a 600 dpi laser print. Vector, so it needs no
+    image file and stays crisp at any printer resolution.
+    """
+    c.saveState()
+    c.setFillColor(color)
+    c.setStrokeColor(color)
+    r = size / 2
+    cx, cy = x + r, y + r
+    # ring: a filled annulus, so its weight is independent of the pen
+    ring = r * 0.97
+    c.setLineWidth(size * 0.05)
+    c.circle(cx, cy, ring, stroke=1, fill=0)
+    # the B: a solid stem plus two solid bowls with open counters
+    stem = size * 0.085
+    left = cx - size * 0.19
+    c.rect(left, cy - size * 0.235, stem, size * 0.47, stroke=0, fill=1)
+    for y0, y1 in ((cy + size * 0.005, cy + size * 0.235), (cy - size * 0.235, cy - size * 0.005)):
+        h = y1 - y0
+        c.setLineWidth(size * 0.075)
+        c.arc(left, y0, left + size * 0.30, y1, 270, 180)
+        # close the bowl back onto the stem so the counter is a clean hole
+        c.setLineWidth(size * 0.075)
+        c.line(left + size * 0.15, y0, left + size * 0.15, y1)
+    # the two ticks, kept clear of the ring
+    c.setLineWidth(size * 0.055)
+    for dx in (-size * 0.075, size * 0.035):
+        c.line(cx + dx, cy + size * 0.235, cx + dx, cy + size * 0.33)
+        c.line(cx + dx, cy - size * 0.33, cx + dx, cy - size * 0.235)
+    c.restoreState()
 
 
 def draw_logo(c, path, x: float, y: float, max_w: float, max_h: float) -> None:
@@ -895,8 +945,273 @@ def place_card(c, cfg: dict, rec: Wallet, kind: str, x_mm: float, ytop_mm: float
     c.rect(x, y, W, H, stroke=1, fill=0)
 
 
+def draw_regency_inside(c, cfg: dict, rec: Wallet, preview: bool) -> None:
+    """Method 3: sides meet at centre; bottom folds up 80 mm, top down at 189 mm.
+
+    The top edge lands at 81 mm, 1 mm above the bottom edge of the packet.
+    All secret ink is on the inward face of the stationary central panel.
+    """
+    c.setStrokeColor(CUT)
+    c.setLineWidth(0.5)
+    c.setDash(4, 3)
+    for x in (52.5, 157.5):
+        c.line(x * mm, 5 * mm, x * mm, 292 * mm)
+    for y in (80, 189):
+        c.line(5 * mm, y * mm, 205 * mm, y * mm)
+    c.setDash()
+    draw_block(c, ["روش سوم: ابتدا دو لبه کناری را به وسط تا کنید.",
+                   "سپس لبه پایین را از خط ۸۰ میلی متر به بالا تا کنید.",
+                   "لبه بالا را از خط دیگر پایین بیاورید؛ زبانه ها را در هم قرار دهید.",
+                   "مهر و موم روی محل اتصال زبانه ها باشد، نه روی QR پشت پاکت."],
+               58 * mm, 270 * mm, 94 * mm, 45 * mm, "Body", 9, align="center")
+    c.saveState()
+    c.translate(55.5 * mm, 103 * mm)
+    draw_private(c, cfg, rec, 99 * mm, 65 * mm)
+    if preview:
+        watermark(c, 99 * mm, 65 * mm)
+    c.restoreState()
+    put(c, "INSIDE / SECRET - " + rec.serial, 105 * mm, 90 * mm,
+        "Body", 8, align="center", color=RED)
+
+
+def draw_regency_back(c, rec: Wallet, preview: bool) -> None:
+    # Portrait, long-edge duplex: x_back = 210 - x_front. The central panel
+    # is symmetric about x=105, so its location remains unchanged.
+    draw_qr(c, rec.address, 89 * mm, 143 * mm, 32 * mm)
+    put(c, rec.serial, 105 * mm, 137 * mm, "Body", 9, align="center")
+    put(c, rec.address, 105 * mm, 131 * mm, "Body", 7, align="center")
+    draw_block(c, "هشدار: قبل از باز کردن سایت", 57 * mm, 123 * mm,
+               96 * mm, 8 * mm, "Body", 10, align="center", bold=True)
+    put(c, "https://b.tc4fun.ir", 105 * mm, 110 * mm, "Body", 12, align="center")
+    draw_block(c, "مطالعه شود", 57 * mm, 105 * mm, 96 * mm, 8 * mm,
+               "Body", 10, align="center", bold=True)
+    if preview:
+        c.saveState()
+        c.translate(55.5 * mm, 82 * mm)
+        watermark(c, 99 * mm, 105 * mm)
+        c.restoreState()
+
+
+def draw_regency_accounts(c, cfg: dict, wallets: list[Wallet], preview: bool) -> None:
+    """Public companion only: never access the recovery phrase here."""
+    for i, rec in enumerate(wallets):
+        row, col = divmod(i, 2)
+        c.saveState()
+        c.translate((7 + col * 100) * mm, (153 - row * 146) * mm)
+        c.setStrokeColor(CUT)
+        c.rect(0, 0, 96 * mm, 137 * mm)
+        put(c, rec.serial, 48 * mm, 128 * mm, "Body", 11, align="center")
+        draw_qr(c, rec.address, 6 * mm, 84 * mm, 32 * mm)
+        link = "https://b.tc4fun.ir/s/" + rec.serial
+        draw_qr(c, link, 58 * mm, 84 * mm, 32 * mm)
+        draw_block(c, "آدرس حساب", 4 * mm, 80 * mm, 36 * mm, 9 * mm,
+                   "Body", 9, align="center")
+        draw_block(c, "استعلام از سایت", 56 * mm, 80 * mm, 36 * mm, 9 * mm,
+                   "Body", 9, align="center")
+        put(c, rec.address, 48 * mm, 67 * mm, "Body", 6.7, align="center")
+        put(c, link, 48 * mm, 60 * mm, "Body", 6.5, align="center")
+        draw_block(c, ["QR آدرس حساب برای دریافت بیت کوین است.",
+                       "QR استعلام، صفحه همین پاکت در سایت را باز می کند.",
+                       "پیش از خرید یا باز کردن پاکت، شرایط و راهنما را بخوانید.",
+                       "موجودی و واریز را با آدرس کامل در بلاک چین بررسی کنید.",
+                       "کلمات بازیابی داخل پاکت محرمانه است؛ در سایت وارد نکنید.",
+                       "هرکس کلمات را داشته باشد می تواند موجودی را بردارد."],
+                   5 * mm, 52 * mm, 86 * mm, 44 * mm, "Body", 8.5)
+        if preview:
+            watermark(c, 96 * mm, 137 * mm)
+        c.restoreState()
+
+
+# --- card-sized Regency envelopes with a wax-seal tab (two per A4) -------------
+CARD_ENV_W, CARD_ENV_H = 85.6, 54.0            # finished, sealed packet (credit card)
+CARD_LEAF_W = 2 * CARD_ENV_W                   # 171.2: the two sides meet at the centre
+CARD_LEAF_H = 148.0                            # two leaves per A4 (296 <= 297)
+CARD_LEAF_X = (210 - CARD_LEAF_W) / 2          # 19.4: centred, so long-edge duplex mirrors onto itself
+CARD_PANEL_X = (CARD_LEAF_W - CARD_ENV_W) / 2  # 42.8
+CARD_BOTTOM_FLAP = 28.0
+CARD_SEAL_TAB = 12.0
+CARD_TOP_FLAP = CARD_ENV_H + CARD_SEAL_TAB     # 66: covers the panel and overhangs 12 mm
+CARD_PANEL_Y = CARD_BOTTOM_FLAP                # 28
+CARD_TOP_FOLD = CARD_PANEL_Y + CARD_ENV_H      # 82
+
+
+def draw_card_secret(c, cfg: dict, rec: Wallet, W: float, H: float) -> None:
+    """Recovery words on the inward face of a card-sized envelope panel.
+
+    The words are printed AND encoded as a QR beside them, so the holder can
+    restore by scanning instead of retyping 12 words. The QR is the same secret
+    as the printed list: both live inside the sealed panel, never on the back.
+    """
+    M = 3 * mm
+    n = cfg["words"]
+    cols = 4 if n <= 12 else 5
+    rows = math.ceil(n / cols)
+    inner_w = W - 2 * M
+    # Title and serial each get their own line: the panel is too narrow to share a row.
+    draw_block(c, cfg["inside_title"], M, H - 2.0 * mm, inner_w, 4.5 * mm, "Body", 8,
+               color=RED, align="right", bold=True)
+    put(c, rec.serial, W - M, H - 8.6 * mm, "Body", 7, align="right", bold=True)
+    c.setStrokeColor(RED)
+    c.setLineWidth(0.7)
+    c.line(M, H - 10.5 * mm, W - M, H - 10.5 * mm)
+    # QR on the left, word grid on the right: 20 mm QR + 2 mm gap leaves 57.6 mm
+    # for the grid, which still fits four columns at ~7 pt.
+    q = 20 * mm
+    qx, qy = M, H - 12.5 * mm - q
+    draw_qr(c, rec.mnemonic, qx, qy, q)
+    grid_x = qx + q + 2 * mm
+    grid_w = W - M - grid_x
+    col_w = grid_w / cols
+    fs = min(7.5, fit_size("24. xxxxxxxx", "Body", col_w - 0.6 * mm, 7.5))
+    fs = min(fs, (q - 1 * mm) / rows / 1.35)
+    num_w = text_width("24.", "Body", fs)
+    sp_w = text_width("24. ", "Body", fs)
+    top = H - 12.5 * mm
+    row_h = (q - 1 * mm) / rows
+    for i, word in enumerate(rec.mnemonic.split()):
+        k, r = divmod(i, rows)
+        x0 = grid_x + k * col_w
+        yb = top - r * row_h - fs * 0.95
+        put(c, f"{i + 1}.", x0 + num_w, yb, "Body", fs, align="right", color=GRAY)
+        put(c, word, x0 + sp_w, yb, "Body", fs)
+    draw_block(c, cfg["contact"], M, 4.0 * mm, inner_w, 3.0 * mm, "Body", 5.5,
+               color=GRAY, align="center")
+
+
+def draw_leaf_guides(c, W: float, H: float) -> None:
+    """Cut border solid, fold creases hatched, seal-tab line dashed red.
+
+    A solid line means "cut here"; a hatched band means "crease here". The two
+    must never look alike, or the operator cuts a fold line.
+    """
+    c.saveState()
+    # cut border: solid, thin
+    c.setStrokeColor(CUT)
+    c.setLineWidth(0.3)
+    c.rect(0, 0, W, H, stroke=1, fill=0)
+    # fold creases: a hatched band, not a dashed line
+    c.setStrokeColor(FOLD)
+    c.setLineWidth(0.35)
+    c.setDash(1.2, 1.2)
+    for x in (CARD_PANEL_X * mm, (CARD_PANEL_X + CARD_ENV_W) * mm):
+        c.line(x, 2 * mm, x, H - 2 * mm)
+    for y in (CARD_BOTTOM_FLAP * mm, CARD_TOP_FOLD * mm):
+        c.line(2 * mm, y, W - 2 * mm, y)
+    c.setDash()
+    # seal-tab boundary: dashed red, the only red guide on the leaf
+    c.setStrokeColor(RED)
+    c.setLineWidth(0.4)
+    c.setDash(2, 2)
+    c.line(2 * mm, (CARD_LEAF_H - CARD_SEAL_TAB) * mm,
+           W - 2 * mm, (CARD_LEAF_H - CARD_SEAL_TAB) * mm)
+    c.setDash()
+    c.restoreState()
+
+
+def draw_regency_card_inside(c, cfg: dict, rec: Wallet, leaf_y: float, preview: bool) -> None:
+    """One card-sized Method-3 envelope on a 171.2 x 148 mm leaf.
+
+    Sides fold to the centre line, the bottom flap folds up, the top flap folds
+    down and its outer 12 mm overhang lands past the bottom fold: that overhang
+    is the wax-seal tab. The sealed packet is 85.6 x 54 mm.
+    """
+    c.saveState()
+    c.translate(CARD_LEAF_X * mm, leaf_y * mm)
+    draw_leaf_guides(c, CARD_LEAF_W * mm, CARD_LEAF_H * mm)
+    # The seal tab carries a small Bitcoin mark instead of a caption: the red
+    # dashed line already says "seal here", and a label would be noise.
+    draw_bitcoin_mark(c, CARD_LEAF_W * mm / 2 - 3 * mm,
+                      (CARD_LEAF_H - CARD_SEAL_TAB) * mm + 1.5 * mm, 6 * mm)
+    # Cold-storage guidance replaces the fold instructions: the operator folds
+    # from the crease lines, the holder needs to know how to treat the key.
+    draw_block(c, ["این پاکت یک کیف پول سرد است: کلید خصوصی فقط روی کاغذ نگه داشته می‌شود و هرگز به اینترنت نمی‌رسد.",
+                   "کلمات بازیابی را در هیچ سایت، اپ یا فرمی وارد نکنید؛ هر کس آن‌ها را ببیند می‌تواند موجودی را بردارد.",
+                   "برای خرج کردن، کلمات را در یک کیف پول معتبر و آفلاین بازیابی کنید و موجودی را به آدرس تازهٔ خود منتقل کنید.",
+                   "راهنمای کامل امنیت:"],
+               CARD_PANEL_X * mm, (CARD_LEAF_H - CARD_SEAL_TAB - 3) * mm,
+               CARD_ENV_W * mm, 34 * mm, "Body", 6.5, align="center")
+    put(c, "https://b.tc4fun.ir/security", CARD_LEAF_W * mm / 2,
+        (CARD_LEAF_H - CARD_SEAL_TAB - 37) * mm, "Body", 7.5, align="center", bold=True)
+    c.saveState()
+    c.translate(CARD_PANEL_X * mm, CARD_PANEL_Y * mm)
+    draw_card_secret(c, cfg, rec, CARD_ENV_W * mm, CARD_ENV_H * mm)
+    if preview:
+        watermark(c, CARD_ENV_W * mm, CARD_ENV_H * mm)
+    c.restoreState()
+    c.restoreState()
+
+
+def draw_regency_card_back(c, rec: Wallet, leaf_y: float, preview: bool) -> None:
+    """Public face: address QR and the warning, inside the panel area only."""
+    c.saveState()
+    c.translate(CARD_LEAF_X * mm, leaf_y * mm)
+    draw_leaf_guides(c, CARD_LEAF_W * mm, CARD_LEAF_H * mm)
+    draw_bitcoin_mark(c, CARD_LEAF_W * mm / 2 - 3 * mm,
+                      (CARD_LEAF_H - CARD_SEAL_TAB) * mm + 1.5 * mm, 6 * mm)
+    c.saveState()
+    c.translate(CARD_PANEL_X * mm, CARD_PANEL_Y * mm)
+    W, H = CARD_ENV_W * mm, CARD_ENV_H * mm
+    q = 24 * mm
+    draw_qr(c, rec.address, (W - q) / 2, H - q - 1.5 * mm, q)
+    # keep a clear quiet zone under the QR before the serial line
+    put(c, rec.serial, W / 2, H - q - 6.5 * mm, "Body", 8, align="center")
+    draw_block(c, "هشدار: قبل از باز کردن سایت", 2 * mm, H - q - 8 * mm, W - 4 * mm, 5 * mm,
+               "Body", 7.5, align="center", bold=True)
+    put(c, "https://b.tc4fun.ir", W / 2, H - q - 14 * mm, "Body", 9, align="center")
+    draw_block(c, "مطالعه شود", 2 * mm, H - q - 16 * mm, W - 4 * mm, 5 * mm,
+               "Body", 7.5, align="center", bold=True)
+    if preview:
+        watermark(c, W, H)
+    c.restoreState()
+    c.restoreState()
+
+
+def render_regency_card(cfg: dict, wallets: list[Wallet], target, preview: bool) -> int:
+    cv = canvas.Canvas(target if isinstance(target, io.BytesIO) else str(target),
+                       pagesize=(210 * mm, 297 * mm))
+    cv.setTitle("Card-sized Regency envelopes + public accounts - SECRET")
+    groups = math.ceil(len(wallets) / 4)
+    # Two leaves per A4: page 2k is the inside pair, page 2k+1 its backs.
+    for start in range(0, len(wallets), 2):
+        pair = wallets[start:start + 2]
+        for i, rec in enumerate(pair):
+            draw_regency_card_inside(cv, cfg, rec, i * CARD_LEAF_H, preview)
+        cv.showPage()
+        for i, rec in enumerate(pair):
+            draw_regency_card_back(cv, rec, i * CARD_LEAF_H, preview)
+        cv.showPage()
+    for start in range(0, len(wallets), 4):
+        draw_regency_accounts(cv, cfg, wallets[start:start + 4], preview)
+        cv.showPage()
+    cv.save()
+    return groups
+
+
+def render_regency(cfg: dict, wallets: list[Wallet], target, preview: bool) -> int:
+    cv = canvas.Canvas(target if isinstance(target, io.BytesIO) else str(target),
+                       pagesize=(210 * mm, 297 * mm))
+    cv.setTitle("Regency envelopes + public accounts - SECRET")
+    groups = math.ceil(len(wallets) / 4)
+    # All duplex pairs precede public companions. Thus a companion sheet can
+    # never accidentally become the reverse of a secret page in multi-batch runs.
+    for rec in wallets:
+        draw_regency_inside(cv, cfg, rec, preview)
+        cv.showPage()
+        draw_regency_back(cv, rec, preview)
+        cv.showPage()
+    for start in range(0, len(wallets), 4):
+        draw_regency_accounts(cv, cfg, wallets[start:start + 4], preview)
+        cv.showPage()
+    cv.save()
+    return groups
+
+
 def render_sheets(cfg: dict, plan: Plan, wallets: list[Wallet], targets: dict, preview: bool) -> int:
-    """targets: {'sheet': path} for pairs, {'public': path, 'private': path} for separate. Returns #sheets."""
+    """targets: {'sheet': path} for pairs/regency, public/private for separate."""
+    if cfg["layout"] == "regency":
+        return render_regency(cfg, wallets, targets["sheet"], preview)
+    if cfg["layout"] == "regency_card":
+        return render_regency_card(cfg, wallets, targets["sheet"], preview)
     separate = cfg["layout"] == "separate"
     canv = {}
     for key, tgt in targets.items():
@@ -955,6 +1270,11 @@ def main() -> None:
     ap.add_argument("--config", default=str(HERE / "config.toml"))
     ap.add_argument("--count", type=int, help="number of SHEETS to make (each is filled completely)")
     ap.add_argument("--out", default="out", help="output folder (default ./out)")
+    ap.add_argument("--regency", action="store_true",
+                    help="four full-A4 Method-3 envelopes plus one public account sheet per count")
+    ap.add_argument("--regency-card", action="store_true",
+                    help="four card-sized (85.6 x 54 mm) Method-3 envelopes with a wax-seal tab, "
+                         "two leaves per A4, plus one public account sheet per count")
     ap.add_argument("--preview", action="store_true",
                     help="make ONE sample sheet with a PUBLIC test phrase to check the design")
     ap.add_argument("--allow-online", action="store_true",
@@ -972,6 +1292,10 @@ def main() -> None:
                  "and an offline printer; this is not a guarantee of security.")
 
     cfg = load_config(Path(args.config))
+    if args.regency:
+        cfg["layout"] = "regency"
+    if args.regency_card:
+        cfg["layout"] = "regency_card"
     register_fonts(cfg)
     plan = make_plan(cfg)
     self_test()
@@ -1108,6 +1432,11 @@ def main() -> None:
         print("\n  public_sheets.pdf  : address + QR cards - safe to print anywhere\n"
               "  private_sheets.pdf : SECRET - print on an offline printer (USB), then delete the file\n"
               "  (card k on the public sheet matches card k, same position, on the private sheet)")
+    elif cfg["layout"] == "regency":
+        print("\n  sheets.pdf : SECRET - print duplex (flip on LONG edge), then delete the file\n"
+              "  pages 1-2, 3-4, 5-6, 7-8 : inside + back of each envelope (one A4 leaf each)\n"
+              "  last page(s)            : public account sheet - safe to print separately\n"
+              "  fold: sides to the centre, bottom up at 80 mm, top down at 189 mm, seal the flaps")
     else:
         print("\n  sheets.pdf : SECRET (contains the recovery words) - print on an offline printer (USB), "
               "then delete the file")

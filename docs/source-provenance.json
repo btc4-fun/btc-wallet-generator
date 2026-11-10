@@ -17,7 +17,7 @@
       "destination_path": "btc_envelope_maker/README.md",
       "source_sha256": "64a3124ec4ac0de0352b1e3c17c74b99cd9349adaae8a469ccd9598b5273ce01",
       "source_git_blob": "16b72f1d6d22349da2d7f31c68447c0cc655c4dc",
-      "destination_sha256": "92cf703e0314b0351665d263987b54a49c6d308c3f3e7a85b1a4e06f7cd6ea4a",
+      "destination_sha256": "8be590b126098d46bb1c2e4169e30cd376363f41e0deefa6fb85493e0a94e912",
       "adaptation": "Document new-output domain and printable contact default b.tc4fun.ir; preserve existing configurations and original source provenance. Document the serial_minsec \"short\" mode (5-char stem, 36 runs/hour, legacy 9-char still accepted). Document the optional public metadata keys (public_notes, site_key, site_url, image_url, public_url_hosts) and their limits."
     },
     {
@@ -41,16 +41,16 @@
       "destination_path": "btc_envelope_maker/btc_envelope_maker.py",
       "source_sha256": "ba28920c681daf903730c294ac510dde5deb111c7262a8534fe6bfde46bbb37e",
       "source_git_blob": "8bdfb78ad4655c1f8bfcdf98e28510a9c3d6b863",
-      "destination_sha256": "318705d16cd871316625b29b23837cdf2677c3a4ba55841dc46703973c697105",
-      "adaptation": "Change new-output brand and printable contact website defaults to b.tc4fun.ir; retain existing operator config and email. Add optional public metadata config keys with https/host validation and pass them to the database row. Add serial_minsec mode 'short': 5-char stem Y(1,base36)+M+D+H+X(1,base36) with a per-hour counter derived from existing batch_* folders (no DB); digits/compact modes retained. Require site_url's host to match site_key (the site's name) so the public pair is a key/value of name and address. Add optional public_links key/value map (instagram, telegram, ...) validated as https URLs and stored with each row."
+      "destination_sha256": "674161ec386b5b38c5a7f458438903a7957d492628b280aa4347994160c99d50",
+      "adaptation": "Change new-output brand and printable contact website defaults to b.tc4fun.ir; retain existing operator config and email. Add optional public metadata config keys with https/host validation and pass them to the database row. Add serial_minsec mode 'short': 5-char stem Y(1,base36)+M+D+H+X(1,base36) with a per-hour counter derived from existing batch_* folders (no DB); digits/compact modes retained. Require site_url's host to match site_key (the site's name) so the public pair is a key/value of name and address. Add optional public_links key/value map (instagram, telegram, ...) validated as https URLs and stored with each row. Add opt-in Regency Method-3 full-A4 envelopes with secrets on inward face, duplex public backs and public account companions. Add opt-in card-sized Regency envelopes (regency_card): two 171.2 x 148 mm leaves per A4, sealed packet 85.6 x 54 mm with a 12 mm wax-seal tab, secrets on the inward face and the public address QR plus warning on the back. Replace the card-sized envelope's fold instructions with cold-storage guidance and the https://b.tc4fun.ir/security link, encode the recovery words as a QR beside the printed list, and draw the cut border solid with hatched fold creases, replace the seal-tab caption with a small vector Bitcoin mark, and move the printable contact mailbox to b.tc4fun.ir."
     },
     {
       "source_path": "btc_envelope_maker/config.example.toml",
       "destination_path": "btc_envelope_maker/config.example.toml",
       "source_sha256": "dbdcafae7aebfc0c20e3b4a7cd2806d55467678ed025a5ac2915ca8feeca1eb8",
       "source_git_blob": "7a7c569bf6d646ec6e44e13ba6ec6d6a3bfce245",
-      "destination_sha256": "deb40137861b242dc6c4f827c7d5018c4ff1a22419a8e7e2c403d2ca21f0f94a",
-      "adaptation": "Align example brand and printable contact website with b.tc4fun.ir, retaining email and explorer URL. Document the optional public metadata keys. Document the serial_minsec \"short\" option."
+      "destination_sha256": "c4db72508787cfa51703941fa2eedec20669426201c91d4c8a3ab2fa00db1b10",
+      "adaptation": "Align example brand and printable contact website with b.tc4fun.ir, retaining email and explorer URL. Document the optional public metadata keys. Document the serial_minsec \"short\" option. Add opt-in Regency Method-3 full-A4 envelopes with secrets on inward face, duplex public backs and public account companions."
     },
     {
       "source_path": "btc_envelope_maker/fonts/LICENSE",

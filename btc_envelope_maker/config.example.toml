@@ -1,6 +1,6 @@
-brand_name = "btc4.fun"
+brand_name = "b.tc4fun.ir"
 tagline = "بیت‌کوین کاغذی"
-contact = "btc4.fun   |   09113458375@btc4.fun"
+contact = "b.tc4fun.ir   |   09113458375@b.tc4fun.ir"
 logo = "logo.png"
 accent_color = "#1f3a5f"
 serial_prefix = ""
@@ -17,6 +17,12 @@ sheet_margin_mm = 5
 card_width_mm = 85.6
 card_height_mm = 54
 card_gap_mm = 0
+# "pairs" | "separate" | "regency" | "regency_card"
+# "regency": four full-A4 Method-3 envelopes per group (words printed inside the
+# envelope itself, no separate private card) plus one public account leaf per group.
+# "regency_card": the same Method-3 fold but the sealed packet is credit-card size
+# (85.6 x 54 mm) with a 12 mm wax-seal tab; two 171.2 x 148 mm leaves per A4.
+# Print duplex, flip on the LONG edge; --regency / --regency-card select them too.
 layout = "pairs"
 pair_direction = "auto"
 font_regular = ""
