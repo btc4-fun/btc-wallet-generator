@@ -5,6 +5,7 @@ Disposable SQLite only; PostgreSQL is not contacted.
 from __future__ import annotations
 
 import contextlib
+import csv
 import importlib.util
 import json
 import os
@@ -203,6 +204,62 @@ class PublicLinksDatabase(unittest.TestCase):
             kept = conn.execute("SELECT jalali_datetime FROM wallets").fetchone()
         self.assertIn("public_links", columns)
         self.assertEqual(kept, ("kept",))
+
+    def test_generated_ledger_preserves_public_metadata_through_import(self):
+        ledger = Path(self.directory.name) / "ledger.csv"
+        links = {"تماس": "mailto:sample@example.invalid",
+                 "تلفن": "tel:+12025550123",
+                 "profile": "https://example.invalid/a;b?x=1&y=2"}
+        public = dict(public_notes='یادداشت، "عمومی"\nخط دوم', site_key="btc4.fun",
+                      site_url="https://btc4.fun/", image_url="https://btc4.fun/test.png",
+                      public_links=links)
+        cfg = dict(public, explorer_url="https://mempool.space/address/",
+                   contact="PRIVATE-CONTACT", notes="PRIVATE-NOTES")
+        wallets = [generator.Wallet("fixture-1", SYNTHETIC_ADDRESS, "NOT-A-RECOVERY-PHRASE", 1, 1),
+                   generator.Wallet("fixture-2", SYNTHETIC_ADDRESS_2, "NOT-A-RECOVERY-PHRASE", 1, 2)]
+        generator.write_ledger(ledger, cfg, wallets, "1405/08/20", "2026-11-11 00:00:00 UTC")
+        rows = btc_db.read_ledger(ledger)
+        self.assertEqual(btc_db.save_rows(self.url, "wallets", rows, skip_existing=True), (2, 0))
+        with self.database() as conn:
+            stored = conn.execute("SELECT public_notes, site_key, site_url, image_url, public_links "
+                                  "FROM wallets ORDER BY serial").fetchall()
+        for row in stored:
+            self.assertEqual(row[:4], tuple(public[key] for key in btc_db.PUBLIC_COLUMNS))
+            self.assertEqual(json.loads(row[4]), links)
+        with ledger.open(encoding="utf-8-sig", newline="") as stream:
+            exported = list(csv.DictReader(stream))
+        self.assertEqual([row["slot"] for row in exported], ["1", "2"])
+        self.assertEqual(exported[0]["explorer_link"], cfg["explorer_url"] + SYNTHETIC_ADDRESS)
+        for marker in ("PRIVATE-CONTACT", "PRIVATE-NOTES", "NOT-A-RECOVERY-PHRASE"):
+            self.assertNotIn(marker, ledger.read_text(encoding="utf-8-sig"))
+        self.assertEqual(btc_db.save_rows(self.url, "wallets", rows, skip_existing=True), (0, 2))
+
+    def test_generated_ledger_empty_metadata_imports_as_null(self):
+        ledger = Path(self.directory.name) / "ledger.csv"
+        wallet = generator.Wallet("fixture-1", SYNTHETIC_ADDRESS, "NOT-A-RECOVERY-PHRASE", 1, 1)
+        for optional in ({}, dict.fromkeys(btc_db.PUBLIC_COLUMNS, "")):
+            with self.subTest(optional=optional):
+                cfg = {**optional, "explorer_url": "", "public_links": {}}
+                generator.write_ledger(ledger, cfg, [wallet], "", "")
+                rows = btc_db.read_ledger(ledger)
+                self.assertTrue(all(getattr(rows[0], name) is None
+                                    for name in (*btc_db.PUBLIC_COLUMNS, btc_db.LINKS_COLUMN)))
+        self.assertEqual(btc_db.save_rows(self.url, "wallets", rows), (1, 0))
+        with self.database() as conn:
+            self.assertEqual(conn.execute("SELECT public_notes, site_key, site_url, image_url, "
+                                          "public_links FROM wallets").fetchone(), (None,) * 5)
+
+    def test_reimport_does_not_repair_existing_public_metadata(self):
+        btc_db.save_rows(self.url, "wallets", [btc_db.Row("fixture-1", SYNTHETIC_ADDRESS)])
+        ledger = Path(self.directory.name) / "ledger.csv"
+        wallet = generator.Wallet("fixture-1", SYNTHETIC_ADDRESS, "NOT-A-RECOVERY-PHRASE", 1, 1)
+        generator.write_ledger(ledger, dict(explorer_url="", public_notes="new note", public_links=LINKS),
+                               [wallet], "", "")
+        self.assertEqual(btc_db.save_rows(self.url, "wallets", btc_db.read_ledger(ledger),
+                                          skip_existing=True), (0, 1))
+        with self.database() as conn:
+            self.assertEqual(conn.execute("SELECT public_notes, public_links FROM wallets").fetchone(),
+                             (None, None))
 
     def test_csv_public_links_column_is_read(self):
         ledger = Path(self.directory.name) / "ledger.csv"

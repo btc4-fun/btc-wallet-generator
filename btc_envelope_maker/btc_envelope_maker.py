@@ -20,6 +20,7 @@ import argparse
 import csv
 import datetime as dt
 import io
+import json
 import math
 import os
 import re
@@ -1235,13 +1236,18 @@ def render_sheets(cfg: dict, plan: Plan, wallets: list[Wallet], targets: dict, p
 
 
 def write_ledger(path: Path, cfg: dict, wallets: list[Wallet], human_dt: str, now: str) -> None:
+    public_columns = ("public_notes", "site_key", "site_url", "image_url")
+    public = [cfg.get(name) or "" for name in public_columns]
+    # Config links are already normalized; JSON preserves separators and Unicode.
+    public.append(json.dumps(cfg["public_links"], ensure_ascii=False, sort_keys=True,
+                             separators=(",", ":")) if cfg.get("public_links") else "")
     with open(path, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.writer(f)
         w.writerow(["serial", "address", "jalali_datetime", "created_utc", "sheet", "slot", "explorer_link",
-                    "status", "sold_to", "funding_txid", "notes"])
+                    "status", "sold_to", "funding_txid", "notes", *public_columns, "public_links"])
         for r in wallets:
             link = (cfg["explorer_url"] + r.address) if cfg["explorer_url"] else ""
-            w.writerow([r.serial, r.address, human_dt, now, r.sheet, r.slot, link, "", "", "", ""])
+            w.writerow([r.serial, r.address, human_dt, now, r.sheet, r.slot, link, "", "", "", "", *public])
 
 
 @contextmanager
